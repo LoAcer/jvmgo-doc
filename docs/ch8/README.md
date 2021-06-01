@@ -576,7 +576,7 @@ System.out.println(i);
 go install jvmgo\ch08
 ```
 命令执行完毕后，在D：\go\workspace\bin目录下出现ch08.exe文件。用javac编译，然后用ch08.exe执行BubbleSortTest类，结果如图8-1所示。 
-![8-1](/img/8-1.png)  
+![8-1](./img/8-1.png)  
 图8-1 BubbleSortTest程序执行结果
 
 #### 8.5 字符串 
@@ -781,7 +781,7 @@ System.out.println("Hello, world!");
 }
 ```
 久违的“Hello，world！”终于出现在控制台上了，如图8-2所示。
-![8-2](/img/8-2.png)   
+![8-2](./img/8-2.png)   
 图8-2 HelloWorld程序执行结果 
 
 
@@ -797,7 +797,7 @@ public class PrintArgs {
 }
 ```
 执行结果如图8-3所示。 
-![8-3](/img/8-3.png)  
+![8-3](./img/8-3.png)  
 图8-3 PrintArgs程序执行结果
 #### 8.7 本章小结 
 本章实现了数组和字符串，在本章的结尾，终于可以运行HelloWorld程序了。不过美中不足的是，我们并不是通过调用System.out.println（）方法，而是通过hack的方式打印的。请读者不要着急，下一章会讨论本地方法调用，第10章会讨论异常处理。到了第11章，将最终去掉这个hack，让println（）方法真正得以调用！

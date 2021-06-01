@@ -241,7 +241,7 @@ go install jvmgo\ch11
 ```
 
 命令执行完毕后，在D：\go\workspace\bin目录下出现ch11.exe文件。用ch11.exe测试HelloWorld程序，结果如图11-1所示。
-![11-1](/img/11-1.png) 
+![11-1](./img/11-1.png) 
 图11-1 HelloWorld程序执行结果
 #### 11.5 总结 
 本书共11章，各章内容如下： 

@@ -255,7 +255,7 @@ func (self *ClassFile) readAndCheckMagic(reader *ClassReader) {
 }
 ```
 Java虚拟机规范规定，如果加载的class文件不符合要求的格式，Java虚拟机实现就抛出java.lang.ClassFormatError异常。但是因为我们才刚刚开始编写虚拟机，还无法抛出异常，所以暂时先调用panic（）方法终止程序执行。用classpy打开ClassFileTest.class文件，可以看到，开头4字节确实是0xCAFEBABE，如图3-1所示。
-![3-1](/img/3-1.png)
+![3-1](./img/3-1.png)
 图3-1 用classpy观察魔数
 
 ##### 3.2.4 版本号 
@@ -280,24 +280,24 @@ func (self *ClassFile) readAndCheckVersion(reader *ClassReader) {
 } 
 ```
 因为笔者使用JDK8编译ClassFileTest类，所以主版本号是52（0x34），次版本号是0，如图3-2所示。 
-![3-2](/img/3-2.png)
+![3-2](./img/3-2.png)
 图3-2 用classpy观察版本号
 
 ##### 3.2.5 类访问标志 
 版本号之后是常量池，但是由于常量池比较复杂，所以放到3.3节介绍。常量池之后是类访问标志，这是一个16位的“bitmask”，指出class文件定义的是类还是接口，访问级别是public还是private，等等。本章只对class文件进行初步解析，并不做完整验证，所以只是读取类访问标志以备后用。第6章会详细讨论访问标志。 
 
 ClassFileTest的类访问标志是0x21，如图3-3所示。
-![3-3](/img/3-3.png) 
+![3-3](./img/3-3.png) 
 图3-3 用classpy观察类访问标志
 ##### 3.2.6 类和超类索引 
 类访问标志之后是两个u2类型的常量池索引，分别给出类名和超类名。class文件存储的类名类似完全限定名，但是把点换成了斜线，Java语言规范把这种名字叫作二进制名（binary names）。因为每个类都有名字，所以thisClass必须是有效的常量池索引。除 
 
 java.lang.Object之外，其他类都有超类，所以superClass只在Object.class中是0，在其他class文件中必须是有效的常量池索引。如图3-4所示，ClassFileTest的类索引是5，超类索引是6。
-![3-4](/img/3-4.png)
+![3-4](./img/3-4.png)
 图3-4 用classpy观察类和超类索引
 ##### 3.2.7 接口索引表 
 类和超类索引后面是接口索引表，表中存放的也是常量池索引，给出该类实现的所有接口的名字。ClassFileTest没有实现接口，所以接口表是空的，如图3-5所示。 
-![3-5](/img/3-5.png)
+![3-5](./img/3-5.png)
 图3-5 用classpy观察接口索引表
 
 ##### 3.2.8 字段和方法表 
@@ -361,9 +361,9 @@ func (self *MemberInfo) Descriptor() string {
 ```
 
 第6章会进一步讨论字段和方法。ClassFileTest有8个字段和两个方法（其中`<init>`是编译器生成的默认构造函数），如图3-6和图3-7所示。
-![3-6](/img/3-6.png)
+![3-6](./img/3-6.png)
 图3-6 用classpy观察字段表
-![3-7](/img/3-7.png)
+![3-7](./img/3-7.png)
 图3-7 用classpy观察方法表
 #### 3.3 解析常量池 
 常量池占据了class文件很大一部分数据，里面存放着各式各样的常量信息，包括数字和字符串常量、类和接口名、字段和方法名，等等。本节将详细介绍常量池和各种常量。
@@ -425,7 +425,7 @@ func (self ConstantPool) getUtf8(index uint16) string {
 } 
 ```
 ClassFileTest的常量池大小是61如图3-8所示。 
-![3-8](/img/3-8.png)
+![3-8](./img/3-8.png)
 图3-8 用classpy观察常量池大小
 ##### 3.3.2 ConstantInfo接口 
 由于常量池中存放的信息各不相同，所以每种常量的格式也不同。常量数据的第一字节是tag，用来区分常量类型。下面是Java虚拟机规范给出的常量结构。 
@@ -524,7 +524,7 @@ func (self *ConstantIntegerInfo) readInfo(reader *ClassReader) {
 } 
 ```
 CONSTANT_Integer_info正好可以容纳一个Java的int型常量，但实际上比int更小的boolean、byte、short和char类型的常量也放在CONSTANT_Integer_info中。编译器给ClassFileTest类的INT字段生成了一个CONSTANT_Integer_info常量，如图3-9所示。
-![3-9](/img/3-9.png) 
+![3-9](./img/3-9.png) 
 图3-9 用classpy观察CONSTANT_Integer_info常量
 ##### 3.3.4 CONSTANT_Float_info 
 CONSTANT_Float_info使用4字节存储IEEE754单精度浮点数常量，结构如下： 
@@ -545,7 +545,7 @@ func (self *ConstantFloatInfo) readInfo(reader *ClassReader) {
 }
 ```
 readInfo（）先读取一个uint32数据，然后调用math包的Float32frombits（）函数把它转换成float32类型。编译器给ClassFileTest类的PI字段生成了一个CONSTANT_Float_info常量，如图3-10所示。
-![3-10](/img/3-10.png)
+![3-10](./img/3-10.png)
 图3-10 用classpy观察CONSTANT_Float_info常量
 ##### 3.3.5 CONSTANT_Long_info 
 CONSTANT_Long_info使用8字节存储整数常量，结构如下： 
@@ -568,7 +568,7 @@ func (self *ConstantLongInfo) readInfo(reader *ClassReader) {
 }
 ```
 readInfo（）先读取一个uint64数据，然后把它转型成int64类型。编译器给ClassFileTest类的LONG字段生成了一个CONSTANT_Long_info常量，如图3-11所示。
-![3-11](/img/3-11.png)
+![3-11](./img/3-11.png)
 图3-11 用classpy观察CONSTANT_Long_info常量
 ##### 3.3.6 CONSTANT_Double_info 
 最后一个数字常量是CONSTANT_Double_info，使用8字节存储IEEE754双精度浮点数，结构如下： 
@@ -590,7 +590,7 @@ func (self *ConstantDoubleInfo) readInfo(reader *ClassReader) {
 }
 ```
 readInfo（）先读取一个uint64数据，然后调用math包的Float64frombits（）函数把它转换成float64类型。编译器给ClassFileTest类的E字段生成了一个CONSTANT_Double_info常量，如图3-12所示。
-![3-12](/img/3-12.png)
+![3-12](./img/3-12.png)
 图3-12 用classpy观察CONSTANT_Double_info常量
 ##### 3.3.7 CONSTANT_Utf8_info 
 CONSTANT_Utf8_info常量里放的是MUTF-8编码的字符串，结构如下： 
@@ -631,7 +631,7 @@ func decodeMUTF8(bytes []byte) string {
 ```
 
 相信细心的读者在前面的截图中已经看到了，字段名、字段描述符等就是以字符串的形式存储在class文件中的，如字段PI对应的CONSTANT_Utf8_info常量，如图3-13所示。 
-![3-13](/img/3-13.png)
+![3-13](./img/3-13.png)
 图3-13 用classpy观察CONSTANT_Utf8_info常量 
 [1]:这个链接中有一些线索：http://stackoverflow.com/questions/15440584/why-does-java-use-modified-utf-8-instead-of-utf-8。
 [2]:或者这篇文章：http://www.oracle.com/technetwork/articles/javase/supplementary-142654.html。
@@ -667,11 +667,11 @@ func (self *ConstantStringInfo) String() string {
 }
 ```
 ClassFileTest的main（）方法使用了字符串字面量“Hello，World！”，对应的CONSTANT_String_info常量如图3-14所示。
-![3-14](/img/3-14.png)
+![3-14](./img/3-14.png)
 图3-14 用classpy观察CONSTANT_String_info常量 
 
 可以看到，string_index是52（0x34）。我们按图索骥，从常量池中找出第52个常量，确实是个CONSTANT_Utf8_info，如图3-15所示。
-![3-15](/img/3-15.png) 
+![3-15](./img/3-15.png) 
 图3-15 用classpy观察CONSTANT_String_info常量（2）
 ##### 3.3.9 CONSTANT_Class_info 
 CONSTANT_Class_info常量表示类或者接口的符号引用，结构如下：
@@ -698,9 +698,9 @@ func (self *ConstantClassInfo) Name() string {
 代码和前一节大同小异，就不多解释了。类和超类索引，以及接口表中的接口索引指向的都是CONSTANT_Class_info常量。由图3-3可知，ClassFileTest的this_class索引是5。我们找到第5个常量，可以看到，的确是CONSTANT_Class_info。它的name_index是55（0x37），如图3-16所示。 
 
 再看第55个常量，也的确是CONSTANT_Utf_info，如图3-17所示。
-![3-16](/img/3-16.png)
+![3-16](./img/3-16.png)
 图3-16 用classpy观察CONSTANT_Class_info常量 
-![3-17](/img/3-17.png)
+![3-17](./img/3-17.png)
 图3-17 用classpy观察CONSTANT_Class_info常量（2）
 ##### 3.3.10 CONSTANT_NameAndType_info 
 CONSTANT_NameAndType_info给出字段或方法的名称和描述符。CONSTANT_Class_info和CONSTANT_NameAndType_info加在一起可以唯一确定一个字段或者方法。其结构如下： 
@@ -774,15 +774,15 @@ type ConstantInterfaceMethodrefInfo struct{ ConstantMemberrefInfo }
 ```
 ClassFileTest类的main（）方法使用了java.lang.System类的out字段，该字段由常量池第2项指出，如图3-18所示。
 可以看到，class_index是50（0x32），name_and_type_index是51（0x33）。我们找到第50和第51个常量，可以看到，确实是CONSTANT_Class_info和CONSTANT_Name-AndType_info，如图3-19所示。
-![3-18](/img/3-18.png)
+![3-18](./img/3-18.png)
 图3-18 用classpy观察CONSTANT_Fieldref_info常量
-![3-19](/img/3-19.png)
+![3-19](./img/3-19.png)
 图3-19 用classpy观察CONSTANT_Fieldref_info常量（2）
 ##### 3.3.12 常量池小结 
 还有三个常量没有介绍：CONSTANT_MethodType_info、CONSTANT_MethodHandle_info和CONSTANT_InvokeDynamic_info。它们是Java SE 7才添加到class文件中的，目的是支持新增的invokedynamic指令。本书不讨论invokedynamic指令，所以解析这三个常量的代码就不在这里介绍了。代码也非常简单，有兴趣的读者可以阅读随书源代码中的ch03\cp_invoke_dynamic.go文件。 
 
 可以把常量池中的常量分为两类：字面量（literal）和符号引用（symbolic reference）。字面量包括数字常量和字符串常量，符号引用包括类和接口名、字段和方法信息等。除了字面量，其他常量都是通过索引直接或间接指向CONSTANT_Utf8_info常量，以CONSTANT_Fieldref_info为例，如图3-20所示。
-![3-20](/img/3-20.png)
+![3-20](./img/3-20.png)
 图3-20 常量引用关系 
 本节只是简单介绍常量池和各种常量的结构，在第6章讨论运行时常量池，第7章讨论方法调用时，会进一步讨论它们的用途。
 #### 3.4 解析属性表 
@@ -920,10 +920,10 @@ func (self *SourceFileAttribute) FileName() string {
 }
 ```
 笔者的编译器给ClassFileTest生成了SourceFile属性，如图3-21所示。
-![3-21](/img/3-21.png)
+![3-21](./img/3-21.png)
 图3-21 用classpy观察SourceFile属性 
 第47和第48个常量，确实都是CONSTANT_Utf8_info常量，如图3-22所示。
-![3-22](/img/3-22.png) 
+![3-22](./img/3-22.png) 
 图3-22 用classpy观察SourceFile属性（2）
 ##### 3.4.4 ConstantValue属性 
 ConstantValue是定长属性，只会出现在field_info结构中，用于表示常量表达式的值（详见Java语言规范的15.28节）。其结构定义如下：
@@ -952,11 +952,11 @@ func (self *ConstantValueAttribute) ConstantValueIndex() uint16 {
 }
 ```
 在第6章讨论类和对象时，会介绍如何使用ConstantValue属性。下面用classpy观察ClassFileTest类的FLAG字段，如图3-23所示。 
-![3-23](/img/3-23.png)
+![3-23](./img/3-23.png)
 图3-23 用classpy观察ConstantValue属性 
 
 可以看到，属性表里确实有一个ConstantValue属性，constantvalue_index是10（0x0A），指向CONSTANT_Integer_info，如图3-24所示。
-![3-24](/img/3-24.png)
+![3-24](./img/3-24.png)
 图3-24 用classpy观察ConstantValue属性（2）
 ##### 3.4.5 Code属性 
 Code是变长属性，只存在于method_info结构中。Code属性中存放字节码等方法相关信息。相比前面介绍的几种属性，Code属性比较复杂，其结构定义如下： 
@@ -1027,7 +1027,7 @@ func readExceptionTable(reader *ClassReader) []*ExceptionTableEntry {
 }
 ```
 ClassFileTest.main（）方法的Code属性如图3-25所示。
-![3-25](/img/3-25.png)
+![3-25](./img/3-25.png)
 图3-25 用classpy观察Code属性
 ##### 3.4.6 Exceptions属性
 Exceptions是变长属性，记录方法抛出的异常表，其结构定义如下：
@@ -1053,7 +1053,7 @@ func (self *ExceptionsAttribute) ExceptionIndexTable() []uint16 {
 }
 ```
 代码比较简单，就不多解释了。ClassFileTest.main（）方法的Exceptions属性如图3-26所示。
-![3-26](/img/3-26.png)
+![3-26](./img/3-26.png)
 图3-26 用classpy观察Code属性
 ##### 3.4.7 LineNumberTable和LocalVariableTable属性 
 LineNumberTable属性表存放方法的行号信息，LocalVariableTable属性表中存放方法的局部变量信息。这两种属性和前面介绍的SourceFile属性都属于调试信息，都不是运行时必需的。在使用javac编译器编译Java程序时，默认会在class文件中生成这些信息。可以使用javac提供的-g：none选项来关闭这些信息的生成，这里就不多介绍了，具体请参考javac用法。 
@@ -1158,7 +1158,7 @@ go install jvmgo\ch03
 
 
 编译成功后，在D：\go\workspace\bin目录下会出现ch03.exe文件。执行ch03.exe，指定-Xjre选项和类名，就可以打印出class文件的信息。笔者把java.lang.String.class文件（位于rt.jar中）的信息打印了出来，如图3-27所示。如果读者想测试自己编写的类，记得要指定-classpath选项。与第2章相比，我们显然取得了很大的进步。 
-![3-27](/img/3-27.png)
+![3-27](./img/3-27.png)
 图3-27 ch03.exe的测试结果
 #### 3.6 本章小结 
 计算机科学家David Wheeler有一句名言：“计算机科学中的任何难题都可以通过增加一个中间层来解决” [1] 。ClassFile结构体就是为了实现类加载功能而增加的中间层。在第6章，我们会进一步处理ClassFile结构体，把它转变Class结构体，并放入方法区。不过在此之前，要先在第4章实现运行时数据区，在第5章实现字节码解释器。 

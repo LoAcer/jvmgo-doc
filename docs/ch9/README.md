@@ -163,7 +163,7 @@ extra interface{}
 extra字段用来记录Object结构体实例的额外信息。同样给它定义Getter和Setter方法，这里就不给出代码了。这个字段之所以是interface{}类型，是因为它在后面几章还会有其他用途。本章，只用它来记录类对象对应的Class结构体指针。 
 
 如果读者读到这里感觉有些吃力，请不要怀疑自己的理解能力，一定是笔者表达得不够好。另外，笔者在写这一节时，自己也是犯了很多次迷糊的。为了帮助大家更好地理解类和对象之间的关系，让我们想象这样一个极简化的Java虚拟机运行时状态：方法区中只加载了两个类，java.lang.Object和java.lang.Class；堆中只通过new指令分配了一个对象。此时Java虚拟机的内存状态如图9-1所示。
-![9-1](/img/9-1.png) 
+![9-1](./img/9-1.png) 
  							图9-1 类和对象关系图 
 
 图9-1只画出了Class和Object结构体的必要字段，并且刻意分开了堆和方法区。在方法区中，class1和class2分别是java.lang.Object和java.lang.Class类的数据。在堆中，object1和object2分别是java.lang.Object和java.lang.Class的类对象。object3是单独的java.lang.Object实例。虽然已经简化到了极点，但仍然有8条箭头，希望有密集恐惧症的读者不要被吓倒。 
@@ -418,7 +418,7 @@ System.out.println(new String[0].getClass().getName());//[Ljava.lang.String;
 }
 ```
 运行结果如图9-2所示。
-![9-2](/img/9-2.png)   
+![9-2](./img/9-2.png)   
 图9-2 GetClassTest程序执行结果
 #### 9.4 字符串拼接和String.intern（）方法 
 ##### 9.4.1 Java类库 
@@ -667,7 +667,7 @@ System.out.println(s1 == s3); // true
 }
 ```
 重新编译本章代码，然后测试StringTest程序，结果如图9-3所示。 
-![9-3](/img/9-3.png)    
+![9-3](./img/9-3.png)    
 图9-3 StringTest程序执行结果
 #### 9.5 Object.hashCode（）、equals（）和toString（） 
 Object类有3个非常重要的方法：hashCode（）返回对象的哈希码；equals（）用来比较两个对象是否“相同”；toString（）返回对象的字符串表示。hashCode（）是个本地方法，equals（）和toString（）则是用Java写的，它们的代码如下：
@@ -721,7 +721,7 @@ System.out.println(obj1.equals(obj1));
 }
 ```
 ObjectTest程序执行结果如图9-4所示。
-![9-4](/img/9-4.png)   
+![9-4](./img/9-4.png)   
 图9-4 ObjectTest程序执行结果
 #### 9.6 Object.clone（） 
 Object类提供了clone（）方法，用来支持对象克隆。这也是一个本地方法，代码如下：
@@ -804,7 +804,7 @@ System.out.println(obj2.pi);
 }
 ```
 CloneTest程序执行结果如图9-5所示。 
-![9-5](/img/9-5.png)  
+![9-5](./img/9-5.png)  
 图9-5 CloneTest程序执行结果
 #### 9.7 自动装箱和拆箱 
 前面讨论过，为了更好地融入Java的对象系统，每种基本类型都有一个包装类与之对应。从Java 5开始，Java语法增加了自动装箱和拆箱（autoboxing/unboxing）能力，可以在必要时把基本类型转换成包装类型或者反之。这个增强完全是由编译器完成的，Java虚拟机没有做任何调整。 
@@ -917,7 +917,7 @@ public class BoxTest {
 }
 ```
 BoxTest程序的执行结果如图9-6所示。
-![9-6](/img/9-6.png) 
+![9-6](./img/9-6.png) 
 图9-6 BoxTest程序执行结果
 #### 9.8 本章小结 
 本章主要讨论了本地方法调用，以及Java类库中一些最基本的类。前几章基本上都是围绕Java虚拟机本身如何工作而展开讨论。通过本章的学习，读者应该对Java虚拟机和Java类库如何配合工作有了初步的了解。下一章将讨论异常处理。

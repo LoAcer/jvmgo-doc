@@ -164,10 +164,10 @@ self[index] = slot
 }
 ```
 如果忽略long和double类型参数，则静态方法的参数传递过程如图7-1所示。
-![7-1](/img/7-1.png)
+![7-1](./img/7-1.png)
 图7-1 静态方法参数传递示意图
 实例方法的参数传递过程如图7-2所示。 
-![7-2](/img/7-2.png) 
+![7-2](./img/7-2.png) 
 图7-2 实例方法参数传递示意图 
 
 那么那个ArgSlotCount（）方法返回了什么呢？打开ch07\rtda\heap\method.go文件，修改Method结构体，给它添加argSlotCount字段，代码如下： 
@@ -652,7 +652,7 @@ private void instanceMethod() {}
 }
 ```
 用javac编译InvokeDemo类，然后用ch07.exe执行InvokeDemo程序，可以看到程序正常执行（没有任何输出），如图7-3所示。
-![7-3](/img/7-3.png)
+![7-3](./img/7-3.png)
 图7-3 InvokeDemo执行结果 
 
 InvokeDemo只是演示，下面看一个稍微复杂一些的例子。
@@ -670,7 +670,7 @@ return fibonacci(n - 1) + fibonacci(n - 2);
 }
 ```
 FibonacciTest类演示了斐波那契数列的计算，用javac编译它，然后用ch07.exe执行，结果如图7-4所示。 
-![7-4](/img/7-4.png) 
+![7-4](./img/7-4.png) 
 图7-4 FibonacciTest执行结果 
 几秒钟停顿之后，控制台上打印出了832040。我们的Java虚拟机终于可以执行复杂计算了。方法调用指令就测试到这里，下面在本章的最后，讨论类的初始化。
 #### 7.8 类初始化 
