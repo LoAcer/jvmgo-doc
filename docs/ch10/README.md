@@ -68,11 +68,11 @@ func fillInStackTrace(frame *rtda.Frame) { // 在 10.5节实现
 异常处理是通过try-catch句实现的，还是参考Java虚拟机规范的3.12节，里面有一个例子，代码如下：
 ```java
 void catchOne() { 
-try {
-tryItOut(); 
-} catch (TestExc e) { 
-handleExc(e); 
-} 
+    try {
+        tryItOut(); 
+    } catch (TestExc e) { 
+        handleExc(e); 
+    } 
 }
 ```
 上面的方法编译之后，产生下面的字节码：
@@ -114,8 +114,8 @@ Code_attribute {
 打开ch10\rtda\heap\method.go文件，给Method结构体添加exceptionTable字段，代码如下： 
 ```go
 type Method struct { 
-... // 其他字段 
-exceptionTable ExceptionTable 
+    ... // 其他字段 
+    exceptionTable ExceptionTable 
 }
 ```
 然后修改copyAttributes（）方法，从Code属性中复制异常处理表，代码如下：
@@ -156,42 +156,42 @@ type ExceptionHandler struct {
 这4个字段在前面已经介绍过，这里不多解释。继续编辑exception_table.go文件，在其中实现newExceptionTable（）函数，代码如下：
 ```go
 func newExceptionTable(entries []*classfile.ExceptionTableEntry,cp *ConstantPool) ExceptionTable { 
-table := make([]*ExceptionHandler, len(entries)) 
-for i, entry := range entries { 
-table[i] = &ExceptionHandler{ 
-startPc: int(entry.StartPc()), 
-endPc: int(entry.EndPc()), 
-handlerPc: int(entry.HandlerPc()), 
-catchType: getCatchType(uint(entry.CatchType()), cp), 
-} 
-}
-return table 
+    table := make([]*ExceptionHandler, len(entries)) 
+    for i, entry := range entries { 
+        table[i] = &ExceptionHandler{ 
+            startPc: int(entry.StartPc()), 
+            endPc: int(entry.EndPc()), 
+            handlerPc: int(entry.HandlerPc()), 
+            catchType: getCatchType(uint(entry.CatchType()), cp), 
+        } 
+    }
+    return table 
 }
 ```
 newExceptionTable（）函数把class文件中的异常处理表转换成ExceptionTable类型。有一点需要特别说明：异常处理项的catchType有可能是0。我们知道0是无效的常量池索引，但是在这里0并非表示catch-none，而是表示catch-all，它的用法马上就会看到。get -CatchType（）函数从运行时常量池中查找类符号引用，代码如下：
 ```go
 func getCatchType(index uint, cp *ConstantPool) *ClassRef { 
-if index == 0 { 
-return nil 
-}
-return cp.GetConstant(index).(*ClassRef) 
+    if index == 0 { 
+        return nil 
+    }
+    return cp.GetConstant(index).(*ClassRef) 
 }
 ```
 继续编辑exception_table.go文件，实现findExceptionHandler（）方法，代码如下：
 ```go
 func (self ExceptionTable) findExceptionHandler(exClass *Class, pc int) *ExceptionHandler { 
-for _, handler := range self { 
-if pc >= handler.startPc && pc < handler.endPc { 
-if handler.catchType == nil { 
-return handler // catch-all 
-}
-catchClass := handler.catchType.ResolvedClass() 
-if catchClass == exClass || catchClass.IsSuperClassOf(exClass) { 
-return handler 
-} 
-} 
-}
-return nil 
+    for _, handler := range self { 
+        if pc >= handler.startPc && pc < handler.endPc { 
+            if handler.catchType == nil { 
+                return handler // catch-all 
+            }
+            catchClass := handler.catchType.ResolvedClass() 
+            if catchClass == exClass || catchClass.IsSuperClassOf(exClass) { 
+                return handler 
+            } 
+        } 
+    }
+    return nil 
 }
 ```
 异常处理表查找逻辑前面已经描述过，此处不再赘述。这里注意两点。第一，startPc给出的是try{}语句块的第一条指令，endPc给出的则是try{}语句块的下一条指令。第二，如果catchType是nil（在class文件中是0），表示可以处理所有异常，这是用来实现finally子句的。为了节约篇幅，本章就不再讨论多个catch块、嵌套try-catch，以及finally子句等对应的字节码实现了，读者可以阅读Java虚拟机规范的3.12节。下一节将实现athrow指令。
@@ -209,36 +209,36 @@ type ATHROW struct{ base.NoOperandsInstruction }
 athrow指令的操作数是一个异常对象引用，从操作数栈弹出。 Execute（）方法的代码如下：
 ```go
 func (self *ATHROW) Execute(frame *rtda.Frame) { 
-ex := frame.OperandStack().PopRef() 
-if ex == nil { 
-panic("java.lang.NullPointerException") 
-}
-thread := frame.Thread() 
-if !findAndGotoExceptionHandler(thread, ex) { 
-handleUncaughtException(thread, ex) 
-} 
+    ex := frame.OperandStack().PopRef() 
+    if ex == nil { 
+        panic("java.lang.NullPointerException") 
+    }
+    thread := frame.Thread() 
+    if !findAndGotoExceptionHandler(thread, ex) { 
+        handleUncaughtException(thread, ex) 
+    } 
 }
 ```
 先从操作数栈中弹出异常对象引用，如果该引用是null，则抛出NullPointerException异常，否则看是否可以找到并跳转到异常处理代码。findAndGotoExceptionHandler（）函数的代码如下：
 ```go
 func findAndGotoExceptionHandler(thread *rtda.Thread, ex *heap.Object) bool { 
-for {
-frame := thread.CurrentFrame() 
-pc := frame.NextPC() - 1 
-handlerPC := frame.Method().FindExceptionHandler(ex.Class(), pc) 
-if handlerPC > 0 { 
-stack := frame.OperandStack() 
-stack.Clear() 
-stack.PushRef(ex) 
-frame.SetNextPC(handlerPC) 
-return true 
-}
-thread.PopFrame() 
-if thread.IsStackEmpty() { 
-break 
-} 
-}
-return false 
+    for {
+        frame := thread.CurrentFrame() 
+        pc := frame.NextPC() - 1 
+        handlerPC := frame.Method().FindExceptionHandler(ex.Class(), pc) 
+        if handlerPC > 0 { 
+            stack := frame.OperandStack() 
+            stack.Clear() 
+            stack.PushRef(ex) 
+            frame.SetNextPC(handlerPC) 
+            return true 
+        }
+        thread.PopFrame() 
+        if thread.IsStackEmpty() { 
+            break 
+        } 
+    }
+    return false 
 }
 ```
 从当前帧开始，遍历Java虚拟机栈，查找方法的异常处理表。假设遍历到帧F，如果在F对应的方法中找不到异常处理项，则把F弹出，继续遍历。反之如果找到了异常处理项，在跳转到异常处理代码之前，要先把F的操作数栈清空，然后把异常对象引用推入栈顶。OperandStack结构体的Clear（）方法是新增加的，后面给出它的代码。
@@ -246,17 +246,17 @@ return false
 如果遍历完Java虚拟机栈还是找不到异常处理代码，则handleUncaughtException（）函数打印出Java虚拟机栈信息，代码如下：
 ```go
 func handleUncaughtException(thread *rtda.Thread, ex *heap.Object) {
-thread.ClearStack() 
-jMsg := ex.GetRefVar("detailMessage", "Ljava/lang/String;") 
-goMsg := heap.GoString(jMsg) 
-println(ex.Class().JavaName() + ": " + goMsg) 
-stes := reflect.ValueOf(ex.Extra()) 
-for i := 0; i < stes.Len(); i++ { 
-ste := stes.Index(i).Interface().(interface { 
-String() string 
-})
-println("\tat " + ste.String()) 
-} 
+    thread.ClearStack() 
+    jMsg := ex.GetRefVar("detailMessage", "Ljava/lang/String;") 
+    goMsg := heap.GoString(jMsg) 
+    println(ex.Class().JavaName() + ": " + goMsg) 
+    stes := reflect.ValueOf(ex.Extra()) 
+    for i := 0; i < stes.Len(); i++ { 
+        ste := stes.Index(i).Interface().(interface { 
+            String() string 
+        })
+        println("\tat " + ste.String()) 
+    } 
 } 
 ```
 handleUncaughtException（）函数把Java虚拟机栈清空，然后打印出异常信息。由于Java虚拟机栈已经空了，所以解释器也就终止执行了。上面的代码使用Go语言的reflect包打印Java虚拟机栈信息。可以猜到，异常对象的extra字段中存放的就是Java虚拟机栈信息，那么这个extra字段是什么时候设置的呢？10.5节会揭晓答案。 
@@ -274,15 +274,15 @@ func (self *OperandStack) Clear() {
 Thread结构体的ClearStack（）方法如下： 
 ```go
 func (self *Thread) ClearStack() {
-self.stack.clear() 
+    self.stack.clear() 
 }
 ```
 它调用了Stack结构体的clear（）方法，代码如下：
 ```go
 func (self *Stack) clear() { 
-for !self.isEmpty() { 
-self.pop() 
-} 
+    for !self.isEmpty() { 
+        self.pop() 
+    } 
 }
 ```
 athrow指令实现后，还需要修改ch10\instructions\factory.go文件，在NewInstruc -tion（）函数中增加athrow指令的case语句，为了节约篇幅这里就不给出代码了。
@@ -290,71 +290,71 @@ athrow指令实现后，还需要修改ch10\instructions\factory.go文件，在N
 回到ch10\native\java\lang\Throwable.go文件，在其中定义StackTraceElement结构体，代码如下：
 ```go
 type StackTraceElement struct { 
-fileName string 
-className string 
-methodName string 
-lineNumber int 
+    fileName string 
+    className string 
+    methodName string 
+    lineNumber int 
 }
 ```
 StackTraceElement结构体用来记录Java虚拟机栈帧信息：lineNumber字段给出帧正在执行哪行代码；methodName字段给出方法名；className字段给出声明方法的类名；fileName字段给出类所在的文件名。下面实现java.lang.Throwable的fillInStackTrace（）本地方法，代码如下： 
 ```go
 // private native Throwable fillInStackTrace(int dummy); 
 func fillInStackTrace(frame *rtda.Frame) { 
-this := frame.LocalVars().GetThis() 
-frame.OperandStack().PushRef(this) 
-stes := createStackTraceElements(this, frame.Thread()) 
-this.SetExtra(stes) 
+    this := frame.LocalVars().GetThis() 
+    frame.OperandStack().PushRef(this) 
+    stes := createStackTraceElements(this, frame.Thread()) 
+    this.SetExtra(stes) 
 }
 ```
 重点在createStackTraceElements（）函数里，代码如下：
 ```go
 func createStackTraceElements(tObj *heap.Object, thread *rtda.Thread) []*StackTraceElement { 
-skip := distanceToObject(tObj.Class()) + 2 
-frames := thread.GetFrames()[skip:] 
-stes := make([]*StackTraceElement, len(frames)) 
-for i, frame := range frames { 
-stes[i] = createStackTraceElement(frame) 
-}
-return stes 
+    skip := distanceToObject(tObj.Class()) + 2 
+    frames := thread.GetFrames()[skip:] 
+    stes := make([]*StackTraceElement, len(frames)) 
+    for i, frame := range frames { 
+        stes[i] = createStackTraceElement(frame) 
+    }
+    return stes 
 }
 ```
 这个函数需要解释一下。由于栈顶两帧正在执行fillInStackTrace（int）和fillInStackTrace()方法，所以需要跳过这两帧。这两帧下面的几帧正在执行异常类的构造函数，所以也要跳过，具体要跳过多少帧数则要看异常类的继承层次。distanceToObject()函数计算所需跳过的帧数，代码如下：
 ```go
 func distanceToObject(class *heap.Class) int { 
-distance := 0 
-for c := class.SuperClass(); c != nil; c = c.SuperClass() { 
-distance++ 
-}
-return distance 
+    distance := 0 
+    for c := class.SuperClass(); c != nil; c = c.SuperClass() { 
+        distance++ 
+    }
+    return distance 
 }
 ```
 计算好需要跳过的帧之后，调用Thread结构体的GetFrames()方法拿到完整的Java虚拟机栈，然后reslice一下就是真正需要的帧。GetFrames（）方法只是调用了Stack结构体的getFrames（）方法，代码如下：
 ```go
 func (self *Thread) GetFrames() []*Frame {
-return self.stack.getFrames() 
+    return self.stack.getFrames() 
 }
 ```
 下面是getFrames（）方法的代码。 
 ```go
 func (self *Stack) getFrames() []*Frame { 
-frames := make([]*Frame, 0, self.size) 
-for frame := self._top; frame != nil; frame = frame.lower { 
-frames = append(frames, frame) 
-}
-return frames 
+    frames := make([]*Frame, 0, self.size) 
+    for frame := self._top; frame != nil; frame = frame.lower { 
+        frames = append(frames, frame) 
+    }
+    return frames 
 }
 ```
 createStackTraceElement（）函数根据帧创建StackTraceElement实例，代码如下：
 ```go
 func createStackTraceElement(frame *rtda.Frame) *StackTraceElement { 
-method := frame.Method() 
-class := method.Class() 
-return &StackTraceElement{ 
-fileName: class.SourceFile(), 
-className: class.JavaName(), 
-methodName: method.Name(), 
-lineNumber: method.GetLineNumber(frame.NextPC() - 1), 
-} 
+    method := frame.Method() 
+    class := method.Class() 
+    return &StackTraceElement{ 
+        fileName: class.SourceFile(), 
+        className: class.JavaName(), 
+        methodName: method.Name(), 
+        lineNumber: method.GetLineNumber(frame.NextPC() - 1), 
+    } 
 }
 ```
 最后实现Class结构体的SourceFile（）方法和Method结构体的GetLineNumber（）方法。打开class.go，给Class结构体添加sourceFile字段，代码如下：
@@ -367,19 +367,19 @@ type Class struct {
 SourceFile（）是getter方法，这里就不给出代码了。接下来需要修改newClass（）函数，从class文件中读取源文件名，改动如下：
 ```go
 func newClass(cf *classfile.ClassFile) *Class { 
-class := &Class{} 
-... // 其他代码 
-class.sourceFile = getSourceFile(cf) 
-return class 
+    class := &Class{} 
+    ... // 其他代码 
+    class.sourceFile = getSourceFile(cf) 
+    return class 
 }
 ```
 在3.4.3节讨论过，源文件名在ClassFile结构的属性表中，getSourceFile（）函数提取这个信息，代码如下：
 ```go
 func getSourceFile(cf *classfile.ClassFile) string { 
-if sfAttr := cf.SourceFileAttribute(); sfAttr != nil { 
-return sfAttr.FileName() 
-}
-return "Unknown" 
+    if sfAttr := cf.SourceFileAttribute(); sfAttr != nil { 
+        return sfAttr.FileName() 
+    }
+    return "Unknown" 
 }
 ```
 注意，并不是每个class文件中都有源文件信息，这个因编译时的编译器选项而异。Class结构体改完了，下面修改Method结构体。打开method.go，给Method结构体添加lineNumberTable字段，改动如下：
@@ -393,38 +393,38 @@ type Method struct {
 然后修改copyAttributes（）方法，从class文件中提取行号表，代码如下：
 ```go
 func (self *Method) copyAttributes(cfMethod *classfile.MemberInfo) { 
-if codeAttr := cfMethod.CodeAttribute(); codeAttr != nil { 
-self.maxStack = codeAttr.MaxStack() 
-self.maxLocals = codeAttr.MaxLocals() 
-self.code = codeAttr.Code() 
-self.lineNumberTable = codeAttr.LineNumberTableAttribute() 
-self.exceptionTable = newExceptionTable(codeAttr.ExceptionTable(), 
-self.class.constantPool) 
-} 
+    if codeAttr := cfMethod.CodeAttribute(); codeAttr != nil { 
+        self.maxStack = codeAttr.MaxStack() 
+        self.maxLocals = codeAttr.MaxLocals() 
+        self.code = codeAttr.Code() 
+        self.lineNumberTable = codeAttr.LineNumberTableAttribute() 
+        self.exceptionTable = newExceptionTable(codeAttr.ExceptionTable(), 
+        self.class.constantPool) 
+    } 
 }
 ```
 最后添加GetLineNumber（）方法，代码如下：
 ```go
 func (self *Method) GetLineNumber(pc int) int { 
-if self.IsNative() { 
-return -2 
-}
-if self.lineNumberTable == nil { 
-return -1 
-}
-return self.lineNumberTable.GetLineNumber(pc) 
+    if self.IsNative() { 
+        return -2 
+    }
+    if self.lineNumberTable == nil { 
+        return -1 
+    }
+    return self.lineNumberTable.GetLineNumber(pc) 
 }
 ``` 
 和源文件名一样，并不是每个方法都有行号表。如果方法没有行号表，自然也就查不到pc对应的行号，这种情况下返回–1。本地方法没有字节码，这种情况下返回–2。剩下的情况调用LineNumberTableAttribute结构体的GetLineNumber（）方法查找行号，代码如下：
 ```go
 func (self *LineNumberTableAttribute) GetLineNumber(pc int) int { 
-for i := len(self.lineNumberTable) - 1; i >= 0; i-- { 
-entry := self.lineNumberTable[i] 
-if pc >= int(entry.startPc) { 
-return int(entry.lineNumber) 
-} 
-}
-return -1 
+    for i := len(self.lineNumberTable) - 1; i >= 0; i-- { 
+        entry := self.lineNumberTable[i] 
+        if pc >= int(entry.startPc) { 
+            return int(entry.lineNumber) 
+        } 
+    }
+    return -1 
 }
 ```
 上面的代码在classfile\attr_line_number_table.go文件中，行号表的更多信息请参考3.4.7节。
@@ -437,23 +437,23 @@ go install jvmgo\ch10
 ```java
 package jvmgo.book.ch10; 
 public class ParseIntTest { 
-public static void main(String[] args) { 
-foo(args); 
-}
-private static void foo(String[] args) { 
-try {
-bar(args); 
-} catch (NumberFormatException e) { 
-System.out.println(e.getMessage()); 
-} 
-}
-private static void bar(String[] args) { 
-if (args.length == 0) { 
-throw new IndexOutOfBoundsException("no args!"); 
-}
-int x = Integer.parseInt(args[0]); 
-System.out.println(x); 
-} 
+    public static void main(String[] args) { 
+        foo(args); 
+    }
+    private static void foo(String[] args) { 
+        try {
+            bar(args); 
+        } catch (NumberFormatException e) { 
+            System.out.println(e.getMessage()); 
+        } 
+    }
+    private static void bar(String[] args) { 
+        if (args.length == 0) { 
+            throw new IndexOutOfBoundsException("no args!"); 
+        }
+        int x = Integer.parseInt(args[0]); 
+        System.out.println(x); 
+    } 
 } 
 ```
 笔者使用不同的参数进行测试，结果如图10-1所示。

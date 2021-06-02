@@ -47,7 +47,7 @@ D:\go\workspace\src
 ```
 
 #### 1.2 java命令
-::: TIP
+::: tip
 Java虚拟机的工作是运行Java应用程序。和其他类型的应用程序一样，Java应用程序也需要一个入口点，这个入口点就是我们熟知的main（）方法。如果一个类包含main（）方法，这个类就可以用来启动Java应用程序，我们把这个类叫作主类。最简单的Java程序是只有一个main（）方法的类，如著名的HelloWorld程序。 
 :::
 
@@ -116,7 +116,7 @@ func parseCmd() *Cmd {
 首先设置flag.Usage变量，把printUsage（）函数赋值给它；然后调用flag包提供的各种Var（）函数设置需要解析的选项；接着调用Parse（）函数解析选项。如果Parse（）函数解析失败，它就调用printUsage（）函数把命令的用法打印到控制台。printUsage（）函数的代码如下：
 ```go
 func printUsage() {
-fmt.Printf("Usage: %s [-options] class [args...]\n", os.Args[0]) 
+    fmt.Printf("Usage: %s [-options] class [args...]\n", os.Args[0]) 
 }
 ```
 

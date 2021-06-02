@@ -4,12 +4,12 @@
 
 ```java
 public class HelloWorld { 
-public static void main(String[] args) { 
-System.out.println("Hello, world!"); 
-} 
+    public static void main(String[] args) { 
+        System.out.println("Hello, world!"); 
+    } 
 } 
 ```
-::: TIP
+::: tip
 加载HelloWorld类之前，首先要加载它的超类，也就是java.lang.Object。在调用main（）方法之前，因为虚拟机需要准备好参数数组，所以需要加载java.lang.String和java.lang.String[]类。把字符串打印到控制台还需要加载java.lang.System类，等等。那么，Java虚拟机从哪里寻找这些类呢？本章将详细讨论这个问题。
 :::
 
@@ -163,7 +163,7 @@ import "errors"
 import "io/ioutil" 
 import "path/filepath" 
 type ZipEntry struct { 
-absPath string 
+    absPath string 
 }
 func newZipEntry(path string) *ZipEntry {...} 
 func (self *ZipEntry) readClass(className string) ([]byte, Entry, error) {...} 
@@ -172,40 +172,40 @@ func (self *ZipEntry) String() string {...}
 absPath字段存放ZIP或JAR文件的绝对路径。构造函数和String（）与DirEntry大同小异，就不多解释了，代码如下：
 ```go
 func newZipEntry(path string) *ZipEntry { 
-absPath, err := filepath.Abs(path) 
-if err != nil { 
-panic(err) 
-}
-return &ZipEntry{absPath} 
+    absPath, err := filepath.Abs(path) 
+    if err != nil { 
+        panic(err) 
+    }
+    return &ZipEntry{absPath} 
 }
 func (self *ZipEntry) String() string { 
-return self.absPath 
+    return self.absPath 
 }
 ```
 
 下面重点介绍如何从ZIP文件中提取class文件，代码如下：
 ```go
 func (self *ZipEntry) readClass(className string) ([]byte, Entry, error) {
-r, err := zip.OpenReader(self.absPath) 
-if err != nil { 
-return nil, nil, err 
-}
-defer r.Close() 
-for _, f := range r.File { 
-if f.Name == className {
-rc, err := f.Open() 
-if err != nil { 
-return nil, nil, err 
-}
-defer rc.Close() 
-data, err := ioutil.ReadAll(rc) 
-if err != nil { 
-return nil, nil, err 
-}
-return data, self, nil 
-} 
-}
-return nil, nil, errors.New("class not found: " + className) 
+    r, err := zip.OpenReader(self.absPath) 
+    if err != nil { 
+        return nil, nil, err 
+    }
+    defer r.Close() 
+    for _, f := range r.File { 
+        if f.Name == className {
+            rc, err := f.Open() 
+            if err != nil { 
+                return nil, nil, err 
+            }
+            defer rc.Close() 
+            data, err := ioutil.ReadAll(rc) 
+            if err != nil { 
+                return nil, nil, err 
+            }
+            return data, self, nil 
+        } 
+    }
+    return nil, nil, errors.New("class not found: " + className) 
 }
 ```
 首先打开ZIP文件，如果这一步出错的话，直接返回。然后遍历ZIP压缩包里的文件，看能否找到class文件。如果能找到，则打开class文件，把内容读取出来，并返回。如果找不到，或者出现其他错误，则返回错误信息。有两处使用了defer语句来确保打开的文件得以关闭。readClass（）方法每次都要打开和关闭ZIP文件，因此效率不是很高。笔者进行了优化，但鉴于篇幅有限，就不展示具体代码了。感兴趣的读者可以阅读ch02\classpath\entry_zip2.go文件。
@@ -223,34 +223,34 @@ func (self CompositeEntry) String() string {...}
 如前所述，CompositeEntry由更小的Entry组成，正好可以表示成[]Entry。在Go语言中，数组属于比较低层的数据结构，很少直接使用。大部分情况下，使用更便利的slice类型。构造函数把参数（路径列表）按分隔符分成小路径，然后把每个小路径都转换成具体的Entry实例，代码如下：
 ```go
 func newCompositeEntry(pathList string) CompositeEntry { 
-compositeEntry := []Entry{} 
-for _, path := range strings.Split(pathList, pathListSeparator) { 
-entry := newEntry(path) 
-compositeEntry = append(compositeEntry, entry) 
-}
-return compositeEntry 
+    compositeEntry := []Entry{} 
+    for _, path := range strings.Split(pathList, pathListSeparator) { 
+        entry := newEntry(path) 
+        compositeEntry = append(compositeEntry, entry) 
+    }
+    return compositeEntry 
 }
 ```
 相信读者已经想到readClass（）方法的代码了：依次调用每一个子路径的readClass（）方法，如果成功读取到class数据，返回数据即可；如果收到错误信息，则继续；如果遍历完所有的子路径还没有找到class文件，则返回错误。readClass（）方法的代码如下：
 ```go
 func (self CompositeEntry) readClass(className string) ([]byte, Entry, error) { 
-for _, entry := range self { 
-data, from, err := entry.readClass(className) 
-if err == nil { 
-return data, from, nil 
-} 
-}
-return nil, nil, errors.New("class not found: " + className) 
+    for _, entry := range self { 
+        data, from, err := entry.readClass(className) 
+        if err == nil { 
+            return data, from, nil 
+        } 
+    }
+    return nil, nil, errors.New("class not found: " + className) 
 }
 ```
 String（）方法也不复杂。调用每一个子路径的String（）方法，然后把得到的字符串用路径分隔符拼接起来即可，代码如下：
 ```
 func (self CompositeEntry) String() string { 
-strs := make([]string, len(self)) 
-for i, entry := range self { 
-strs[i] = entry.String() 
-}
-return strings.Join(strs, pathListSeparator) 
+    strs := make([]string, len(self)) 
+    for i, entry := range self { 
+        strs[i] = entry.String() 
+    }
+    return strings.Join(strs, pathListSeparator) 
 }
 ```
 ##### 2.3.5 WildcardEntry 
@@ -261,27 +261,27 @@ import "os"
 import "path/filepath" 
 import "strings" 
 func newWildcardEntry(path string) CompositeEntry { 
-baseDir := path[:len(path)-1] // remove * 
-compositeEntry := []Entry{} 
-walkFn := func(path string, info os.FileInfo, err error) error {...} 
-filepath.Walk(baseDir, walkFn) 
-return compositeEntry 
+    baseDir := path[:len(path)-1] // remove * 
+    compositeEntry := []Entry{} 
+    walkFn := func(path string, info os.FileInfo, err error) error {...} 
+    filepath.Walk(baseDir, walkFn) 
+    return compositeEntry 
 }
 ```
 首先把路径末尾的星号去掉，得到baseDir，然后调用filepath包的Walk（）函数遍历baseDir创建ZipEntry。Walk（）函数的第二个参数也是一个函数，了解函数式编程的读者应该一眼就可以认出这种用法（即函数可作为参数）。walkFn变量的定义如下：
 ```go
 walkFn := func(path string, info os.FileInfo, err error) error { 
-if err != nil { 
-return err 
-}
-if info.IsDir() && path != baseDir { 
-return filepath.SkipDir 
-}
-if strings.HasSuffix(path, ".jar") || strings.HasSuffix(path, ".JAR") { 
-jarEntry := newZipEntry(path) 
-compositeEntry = append(compositeEntry, jarEntry)
-}
-return nil 
+    if err != nil { 
+        return err 
+    }
+    if info.IsDir() && path != baseDir { 
+        return filepath.SkipDir 
+    }
+    if strings.HasSuffix(path, ".jar") || strings.HasSuffix(path, ".JAR") { 
+        jarEntry := newZipEntry(path) 
+        compositeEntry = append(compositeEntry, jarEntry)
+    }
+    return nil 
 }
 ```
 在walkFn中，根据后缀名选出JAR文件，并且返回SkipDir跳过子目录（通配符类路径不能递归匹配子目录下的JAR文件）。
@@ -292,9 +292,9 @@ package classpath
 import "os" 
 import "path/filepath" 
 type Classpath struct { 
-bootClasspath Entry 
-extClasspath Entry 
-userClasspath Entry 
+    bootClasspath Entry 
+    extClasspath Entry 
+    userClasspath Entry 
 }
 func Parse(jreOption, cpOption string) *Classpath {...} 
 func (self *Classpath) ReadClass(className string) ([]byte, Entry, error) {...} 
@@ -303,76 +303,76 @@ func (self *Classpath) String() string {...}
 Classpath结构体有三个字段，分别存放三种类路径。Parse（）函数使用-Xjre选项解析启动类路径和扩展类路径，使用-classpath/-cp选项解析用户类路径，代码如下：
 ```go
 func Parse(jreOption, cpOption string) *Classpath { 
-cp := &Classpath{} 
-cp.parseBootAndExtClasspath(jreOption) 
-cp.parseUserClasspath(cpOption) 
-return cp 
+    cp := &Classpath{} 
+    cp.parseBootAndExtClasspath(jreOption) 
+    cp.parseUserClasspath(cpOption) 
+    return cp 
 }
 ``` 
 parseBootAndExtClasspath（）方法的代码如下：
 ```go
 func (self *Classpath) parseBootAndExtClasspath(jreOption string) { 
-jreDir := getJreDir(jreOption) 
-// jre/lib/* 
-jreLibPath := filepath.Join(jreDir, "lib", "*") 
-self.bootClasspath = newWildcardEntry(jreLibPath) 
-// jre/lib/ext/* 
-jreExtPath := filepath.Join(jreDir, "lib", "ext", "*") 
-self.extClasspath = newWildcardEntry(jreExtPath) 
+    jreDir := getJreDir(jreOption) 
+    // jre/lib/* 
+    jreLibPath := filepath.Join(jreDir, "lib", "*") 
+    self.bootClasspath = newWildcardEntry(jreLibPath) 
+    // jre/lib/ext/* 
+    jreExtPath := filepath.Join(jreDir, "lib", "ext", "*") 
+    self.extClasspath = newWildcardEntry(jreExtPath) 
 } 
 ```
 优先使用用户输入的-Xjre选项作为jre目录。如果没有输入该选项，则在当前目录下寻找jre目录。如果找不到，尝试使用JAVA_HOME环境变量。getJreDir（）函数的代码如下：
 ```go
 func getJreDir(jreOption string) string { 
-if jreOption != "" && exists(jreOption) { 
-return jreOption 
-}
-if exists("./jre") { 
-return "./jre" 
-}
-if jh := os.Getenv("JAVA_HOME"); jh != "" { 
-return filepath.Join(jh, "jre") 
-}
-panic("Can not find jre folder!") 
+    if jreOption != "" && exists(jreOption) { 
+        return jreOption 
+    }
+    if exists("./jre") { 
+        return "./jre" 
+    }
+    if jh := os.Getenv("JAVA_HOME"); jh != "" { 
+        return filepath.Join(jh, "jre") 
+    }
+    panic("Can not find jre folder!") 
 }
 ```
 exists（）函数用于判断目录是否存在，代码如下：
 ```go 
 func exists(path string) bool { 
-if _, err := os.Stat(path); err != nil { 
-if os.IsNotExist(err) { 
-return false 
-} 
-}
-return true 
+    if _, err := os.Stat(path); err != nil { 
+        if os.IsNotExist(err) { 
+            return false 
+        } 
+    }
+    return true 
 }
 ```
 parseUserClasspath（）方法的代码相对简单一些，如下：
 ```go 
 func (self *Classpath) parseUserClasspath(cpOption string) { 
-if cpOption == "" { 
-cpOption = "." 
-}
-self.userClasspath = newEntry(cpOption) 
+    if cpOption == "" { 
+        cpOption = "." 
+    }
+    self.userClasspath = newEntry(cpOption) 
 } 
 ```
 如果用户没有提供-classpath/-cp选项，则使用当前目录作为用户类路径。ReadClass（）方法依次从启动类路径、扩展类路径和用户类路径中搜索class文件，代码如下：
 ```go
 func (self *Classpath) ReadClass(className string) ([]byte, Entry, error) { 
-className = className + ".class" 
-if data, entry, err := self.bootClasspath.readClass(className); err == nil { 
-return data, entry, err 
-}
-if data, entry, err := self.extClasspath.readClass(className); err == nil { 
-return data, entry, err 
-}
-return self.userClasspath.readClass(className) 
+    className = className + ".class" 
+    if data, entry, err := self.bootClasspath.readClass(className); err == nil { 
+        return data, entry, err 
+    }
+    if data, entry, err := self.extClasspath.readClass(className); err == nil { 
+        return data, entry, err 
+    }
+    return self.userClasspath.readClass(className) 
 } 
 ```
 注意，传递给ReadClass（）方法的类名不包含“.class”后缀。最后，String（）方法返回用户类路径的字符串表示，代码如下：
 ```go
 func (self *Classpath) String() string { 
-return self.userClasspath.String() 
+    return self.userClasspath.String() 
 }
 ```
 至此，整个类路径都实现了，下面我们来测试一下。
@@ -389,15 +389,15 @@ func startJVM(cmd *Cmd) {...}
 main（）函数不用变，重写startJVM（）函数，代码如下：
 ```go
 func startJVM(cmd *Cmd) { 
-cp := classpath.Parse(cmd.XjreOption, cmd.cpOption) 
-fmt.Printf("classpath:%v class:%v args:%v\n", cp, cmd.class, cmd.args) 
-className := strings.Replace(cmd.class, ".", "/", -1) 
-classData, _, err := cp.ReadClass(className) 
-if err != nil { 
-fmt.Printf("Could not find or load main class %s\n", cmd.class) 
-return 
-}
-fmt.Printf("class data:%v\n", classData) 
+    cp := classpath.Parse(cmd.XjreOption, cmd.cpOption) 
+    fmt.Printf("classpath:%v class:%v args:%v\n", cp, cmd.class, cmd.args) 
+    className := strings.Replace(cmd.class, ".", "/", -1) 
+    classData, _, err := cp.ReadClass(className) 
+    if err != nil { 
+        fmt.Printf("Could not find or load main class %s\n", cmd.class) 
+        return 
+        }
+    fmt.Printf("class data:%v\n", classData) 
 }
 ``` 
 startJVM（）先打印出命令行参数，然后读取主类数据，并打印到控制台。虽然还是无法真正启动Java虚拟机，不过相比第1章，已经有了很大的进步。打开命令行窗口，执行下面的命令编译本章代码。

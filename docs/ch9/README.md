@@ -395,26 +395,26 @@ go install jvmgo\ch09
 ```java
 package jvmgo.book.ch09; 
 public class GetClassTest { 
-public static void main(String[] args) { 
-System.out.println(void.class.getName()); // void 
-System.out.println(boolean.class.getName()); // boolean 
-System.out.println(byte.class.getName()); // byte 
-System.out.println(char.class.getName()); // char 
-System.out.println(short.class.getName()); // short 
-System.out.println(int.class.getName()); // int 
-System.out.println(long.class.getName()); // long 
-System.out.println(float.class.getName()); // float 
-System.out.println(double.class.getName()); // double 
-System.out.println(Object.class.getName()); // java.lang.Object 
-System.out.println(int[].class.getName()); // [I 
-System.out.println(int[][].class.getName()); // [[I 
-System.out.println(Object[].class.getName()); // [Ljava.lang.Object; 
-System.out.println(Object[][].class.getName()); // [[Ljava.lang.Object; 
-System.out.println(Runnable.class.getName()); // java.lang.Runnable 
-System.out.println("abc".getClass().getName()); // java.lang.String 
-System.out.println(new double[0].getClass().getName()); // [D 
-System.out.println(new String[0].getClass().getName());//[Ljava.lang.String; 
-} 
+    public static void main(String[] args) { 
+        System.out.println(void.class.getName()); // void 
+        System.out.println(boolean.class.getName()); // boolean 
+        System.out.println(byte.class.getName()); // byte 
+        System.out.println(char.class.getName()); // char 
+        System.out.println(short.class.getName()); // short 
+        System.out.println(int.class.getName()); // int 
+        System.out.println(long.class.getName()); // long 
+        System.out.println(float.class.getName()); // float 
+        System.out.println(double.class.getName()); // double 
+        System.out.println(Object.class.getName()); // java.lang.Object 
+        System.out.println(int[].class.getName()); // [I 
+        System.out.println(int[][].class.getName()); // [[I 
+        System.out.println(Object[].class.getName()); // [Ljava.lang.Object; 
+        System.out.println(Object[][].class.getName()); // [[Ljava.lang.Object; 
+        System.out.println(Runnable.class.getName()); // java.lang.Runnable 
+        System.out.println("abc".getClass().getName()); // java.lang.String 
+        System.out.println(new double[0].getClass().getName()); // [D 
+        System.out.println(new String[0].getClass().getName());//[Ljava.lang.String; 
+    } 
 }
 ```
 运行结果如图9-2所示。
@@ -436,9 +436,9 @@ System.out.println(str);
 ```
 为了运行上面的代码，本节将实现以下3个本地方法：
 ::: tip 
-·System.arrayCopy（） 
-·Float.floatToRawIntBits（）
-·Double.doubleToRawLongBits（）
+- System.arrayCopy（） 
+- Float.floatToRawIntBits（）
+- Double.doubleToRawLongBits（）
 ::: 
 这些方法是在哪里使用的呢?StringBuilder.append()方法只是调用了超类的append()方法，代码如下：
 ```java
@@ -595,8 +595,7 @@ copy(_dst, _src)
 }
 ```
 利用Go的内置函数copy（）进行slice拷贝。为了节约篇幅，上面的代码只给出了int数组和对象数组的case语句，其他情况代码大同小异。
-##### 9.4.3 Float.floatToRawIntBits（）和 
-Double.doubleToRawLongBits（）方法 
+##### 9.4.3 Float.floatToRawIntBits（）和 Double.doubleToRawLongBits（）方法 
 Float.floatToRawIntBits（）和Double.doubleToRawLongBits（）返回浮点数的编码，这两个方法大同小异，以Float为例进行介绍。在ch09\native\java\lang目录下创建Float.go文件，在其中注册floatToRawIntBits（）本地方法，代码如下：
 ```go
 package lang 
@@ -604,16 +603,16 @@ import "math"
 import "jvmgo/ch09/native" 
 import "jvmgo/ch09/rtda" 
 func init() { 
-native.Register("java/lang/Float", "floatToRawIntBits", "(F)I", floatToRawIntBits) 
+    native.Register("java/lang/Float", "floatToRawIntBits", "(F)I", floatToRawIntBits) 
 }
 ```
 Go语言的math包提供了一个类似函数：Float32bits（），正好可以用来实现floatToRaw-IntBits（）方法，代码如下：
 ```go
 // public static native int floatToRawIntBits(float value); 
 func floatToRawIntBits(frame *rtda.Frame) { 
-value := frame.LocalVars().GetFloat(0) 
-bits := math.Float32bits(value) 
-frame.OperandStack().PushInt(int32(bits)) 
+    value := frame.LocalVars().GetFloat(0) 
+    bits := math.Float32bits(value) 
+    frame.OperandStack().PushInt(int32(bits)) 
 }
 ```
 ##### 9.4.4 String.intern（）方法 
@@ -631,20 +630,20 @@ func init() {
 ```go
 // public native String intern(); 
 func intern(frame *rtda.Frame) { 
-this := frame.LocalVars().GetThis() 
-interned := heap.InternString(this) 
-frame.OperandStack().PushRef(interned) 
+    this := frame.LocalVars().GetThis() 
+    interned := heap.InternString(this) 
+    frame.OperandStack().PushRef(interned) 
 }
 ```
 如果字符串还没有入池，把它放入并返回该字符串，否则找到已入池字符串并返回。这个逻辑在InternString（）函数中（ch09\rtda\heap\string_pool.go），代码如下：
 ```go
 func InternString(jStr *Object) *Object { 
-goStr := GoString(jStr) 
-if internedStr, ok := internedStrings[goStr]; ok { 
-return internedStr 
-}
-internedStrings[goStr] = jStr 
-return jStr 
+    goStr := GoString(jStr) 
+    if internedStr, ok := internedStrings[goStr]; ok { 
+        return internedStr 
+    }
+    internedStrings[goStr] = jStr 
+    return jStr 
 }
 ```
 字符串相关的本地方法都实现好了，下面我们进行测试。
@@ -654,16 +653,16 @@ return jStr
 ```java
 package jvmgo.book.ch09; 
 public class StringTest {
-public static void main(String[] args) { 
-String s1 = "abc1"; 
-String s2 = "abc1"; 
-System.out.println(s1 == s2); // true 
-int x = 1; 
-String s3 = "abc" + x; 
-System.out.println(s1 == s3); // false 
-s3 = s3.intern(); 
-System.out.println(s1 == s3); // true 
-} 
+    public static void main(String[] args) { 
+        String s1 = "abc1"; 
+        String s2 = "abc1"; 
+        System.out.println(s1 == s2); // true 
+        int x = 1; 
+        String s3 = "abc" + x; 
+        System.out.println(s1 == s3); // false 
+        s3 = s3.intern(); 
+        System.out.println(s1 == s3); // true 
+    } 
 }
 ```
 重新编译本章代码，然后测试StringTest程序，结果如图9-3所示。 
@@ -674,14 +673,14 @@ Object类有3个非常重要的方法：hashCode（）返回对象的哈希码�
 ```java
 package java.lang; 
 public class Object { 
-... // 其他代码省略 
-public native int hashCode(); 
-public boolean equals(Object obj) { 
-return (this == obj); 
-}
-public String toString() { 
-return getClass().getName() + "@" + Integer.toHexString(hashCode()); 
-} 
+    ... // 其他代码省略 
+    public native int hashCode(); 
+    public boolean equals(Object obj) { 
+        return (this == obj); 
+    }
+    public String toString() { 
+        return getClass().getName() + "@" + Integer.toHexString(hashCode()); 
+    } 
 }
 ```
 下面实现hashCode（）方法。打开ch09\native\java\lang\Object.go，导入unsafe包并注册hashCode（）方法，代码如下：
@@ -699,9 +698,9 @@ native.Register("java/lang/Object", "hashCode", "()I", hashCode)
 ```go
 // public native int hashCode(); 
 func hashCode(frame *rtda.Frame) { 
-this := frame.LocalVars().GetThis() 
-hash := int32(uintptr(unsafe.Pointer(this))) 
-frame.OperandStack().PushInt(hash) 
+    this := frame.LocalVars().GetThis() 
+    hash := int32(uintptr(unsafe.Pointer(this))) 
+    frame.OperandStack().PushInt(hash) 
 }
 ```
 把对象引用（Object结构体指针）转换成uintptr类型，然后强制转换成int32推入操作数栈顶。
@@ -710,14 +709,14 @@ frame.OperandStack().PushInt(hash)
 ```java
 package jvmgo.book.ch09; 
 public class ObjectTest { 
-public static void main(String[] args) { 
-Object obj1 = new ObjectTest(); 
-Object obj2 = new ObjectTest(); 
-System.out.println(obj1.hashCode()); 
-System.out.println(obj1.toString()); 
-System.out.println(obj1.equals(obj2)); 
-System.out.println(obj1.equals(obj1)); 
-} 
+    public static void main(String[] args) { 
+        Object obj1 = new ObjectTest(); 
+        Object obj2 = new ObjectTest(); 
+        System.out.println(obj1.hashCode()); 
+        System.out.println(obj1.toString()); 
+        System.out.println(obj1.equals(obj2)); 
+        System.out.println(obj1.equals(obj1)); 
+    } 
 }
 ```
 ObjectTest程序执行结果如图9-4所示。
@@ -750,34 +749,34 @@ func clone(frame *rtda.Frame) {
 如果类没有实现Cloneable接口，则抛出CloneNotSupportedException异常，否则调用Object结构体的Clone（）方法克隆对象，然后把对象副本引用推入操作数栈顶。Clone（）实现稍微有些长，把它放在ch09\rtda\heap\object_clone.go文件中，代码如下：
 ```go
 func (self *Object) Clone() *Object { 
-return &Object{ 
-class: self.class, 
-data: self.cloneData(), 
-} 
+    return &Object{ 
+        class: self.class, 
+        data: self.cloneData(), 
+    } 
 }
 ```
 数据克隆逻辑在cloneData（）函数中，代码如下：
 ```go
 func (self *Object) cloneData() interface{} { 
-switch self.data.(type) { 
-case []int8: ... 
-case []int16: ... 
-case []uint16: ... 
-case []int32: ... 
-case []int64: ... 
-case []float32: ... 
-case []float64: ... 
-case []*Object: 
-elements := self.data.([]*Object) 
-elements2 := make([]*Object, len(elements)) 
-copy(elements2, elements) 
-return elements2 
-default: // []Slot 
-slots := self.data.(Slots) 
-slots2 := newSlots(uint(len(slots))) 
-copy(slots2, slots) 
-return slots2 
-} 
+    switch self.data.(type) { 
+        case []int8: ... 
+        case []int16: ... 
+        case []uint16: ... 
+        case []int32: ... 
+        case []int64: ... 
+        case []float32: ... 
+        case []float64: ... 
+        case []*Object: 
+            elements := self.data.([]*Object) 
+            elements2 := make([]*Object, len(elements)) 
+            copy(elements2, elements) 
+            return elements2 
+        default: // []Slot 
+            slots := self.data.(Slots) 
+            slots2 := newSlots(uint(len(slots))) 
+            copy(slots2, slots) 
+            return slots2 
+    } 
 } 
 ```
 注意，数组也实现了Cloneable接口，所以上面代码中的case语句针对各种数组进行处理。因为代码都大同小异，所以只给出了引用数组的case语句。default语句对普通对象进行克隆。 
@@ -785,22 +784,22 @@ return slots2
 ```java
 package jvmgo.book.ch09; 
 public class CloneTest implements Cloneable { 
-private double pi = 3.14; 
-@Override 
-public CloneTest clone() { 
-try {
-return (CloneTest) super.clone(); 
-} catch (CloneNotSupportedException e) { 
-throw new RuntimeException(e); 
-} 
-}
-public static void main(String[] args) { 
-CloneTest obj1 = new CloneTest(); 
-CloneTest obj2 = obj1.clone(); 
-obj1.pi = 3.1415926; 
-System.out.println(obj1.pi); 
-System.out.println(obj2.pi); 
-} 
+    private double pi = 3.14; 
+    @Override 
+    public CloneTest clone() { 
+        try {
+            return (CloneTest) super.clone(); 
+        } catch (CloneNotSupportedException e) { 
+            throw new RuntimeException(e); 
+        } 
+    }
+    public static void main(String[] args) { 
+        CloneTest obj1 = new CloneTest(); 
+        CloneTest obj2 = obj1.clone(); 
+        obj1.pi = 3.1415926; 
+        System.out.println(obj1.pi); 
+        System.out.println(obj2.pi); 
+    } 
 }
 ```
 CloneTest程序执行结果如图9-5所示。 
