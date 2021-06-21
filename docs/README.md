@@ -4,12 +4,12 @@
 Java核心技术系列-自己动手写Java虚拟机  
 张秀宏 著  
 ISBN：978-7-111-53413-6   
-本书纸版由机械工业出版社于2016年出版，电子版由华章分社（北京华章图文信息有限公司，北京奥维博世图书发行有限公司）全球 范围内制作与发行。  
+本书纸版由机械工业出版社于2016年出版，电子版由华章分社(北京华章图文信息有限公司，北京奥维博世图书发行有限公司)全球 范围内制作与发行。  
 版权所有，侵权必究  
 客服热线：+ 86-10-68995265   
 客服信箱：service@bbbvip.com   
 官方网址：www.hzmedia.com.cn   
-新浪微博 @华章数媒微信公众号 华章电子书（微信号：hzebook） 
+新浪微博 @华章数媒微信公众号 华章电子书(微信号：hzebook) 
 :::
 
 - 目录
@@ -131,9 +131,9 @@ ISBN：978-7-111-53413-6
        - 6.2.3 [方法符号引用](/ch6/#_6-2-3-方法符号引用) 
        - 6.2.4 [接口方法符号引用](/ch6/#_6-2-4-接口方法符号引用) 
    - 6.3 [类加载器 ](/ch6/#_6-3-类加载器)
-       - 6.3.1 [readClass（）](/ch6/#_6-3-1-readclass) 
-       - 6.3.2 [defineClass（）](/ch6/#_6-3-2-defineclass) 
-       - 6.3.3 [link（）](/ch6/#_6-3-3-link) 
+       - 6.3.1 [readClass()](/ch6/#_6-3-1-readclass) 
+       - 6.3.2 [defineClass()](/ch6/#_6-3-2-defineclass) 
+       - 6.3.3 [link()](/ch6/#_6-3-3-link) 
    - 6.4 [对象、实例变量和类变量 ](/ch6/#_6-4-对象、实例变量和类变量)
    - 6.5 [类和字段符号引用解析 ](/ch6/#_6-5-类和字段符号引用解析)
        - 6.5.1 [类符号引用解析](/ch6/#_6-5-1-类符号引用解析)
@@ -193,14 +193,14 @@ ISBN：978-7-111-53413-6
        - 9.3.4 [修改ldc指令](/ch9/#_9-3-4-修改ldc指令) 
        - 9.3.5 [通过反射获取类名](/ch9/#_9-3-5-通过反射获取类名) 
        - 9.3.6 [测试本节代码](/ch9/#_9-3-6-测试本节代码) 
-   - 9.4 [字符串拼接和String.intern（）方法](/ch9/#_9-4-字符串拼接和string-intern-方法) 
+   - 9.4 [字符串拼接和String.intern()方法](/ch9/#_9-4-字符串拼接和string-intern-方法) 
        - 9.4.1 [Java类库](/ch9/#_9-4-1-Java类库) 
-       - 9.4.2 [System.arraycopy（）方法](/ch9/#_9-4-2-system-arraycopy-方法) 
-       - 9.4.3 [Float.floatToRawIntBits（）和 Double.doubleToRawLongBits（）方法](/ch9/#_9-4-3-Float.#_9-4-3-float-floattorawintbits-和-double-doubletorawlongbits-方法)  
-       - 9.4.4 [String.intern（）方法](/ch9/#_9-4-4-string-intern-方法) 
+       - 9.4.2 [System.arraycopy()方法](/ch9/#_9-4-2-system-arraycopy-方法) 
+       - 9.4.3 [Float.floatToRawIntBits()和 Double.doubleToRawLongBits()方法](/ch9/#_9-4-3-Float.#_9-4-3-float-floattorawintbits-和-double-doubletorawlongbits-方法)  
+       - 9.4.4 [String.intern()方法](/ch9/#_9-4-4-string-intern-方法) 
        - 9.4.5 [测试本节代码](/ch9/#_9-4-5-测试本节代码) 
-   - 9.5 [Object.hashCode（）、equals（）和toString（）](/ch9/#_9-5-object-hashcode-、equals-和tostring) 
-   - 9.6 [Object.clone（）](/ch9/#_9-6-object-clone) 
+   - 9.5 [Object.hashCode()、equals()和toString()](/ch9/#_9-5-object-hashcode-、equals-和tostring) 
+   - 9.6 [Object.clone()](/ch9/#_9-6-object-clone) 
    - 9.7 [自动装箱和拆箱 ](/ch9/#_9-7-自动装箱和拆箱)
    - 9.8 [本章小结 ](/ch9/#_9-8-本章小结)
 - 第10章 异常处理 
@@ -214,7 +214,7 @@ ISBN：978-7-111-53413-6
 - 第11章 结束 
    - 11.1 [System类是如何被初始化的](/ch11/#_11-1-System类是如何被初始化的) 
    - 11.2 [初始化System类](/ch11/#_11-2-初始化System类)
-   - 11.3 [System.out.println（）是如何工作的](/ch11/#_11-3-system-out-println-是如何工作的) 
+   - 11.3 [System.out.println()是如何工作的](/ch11/#_11-3-system-out-println-是如何工作的) 
    - 11.4 [测试本章代码](/ch11/#_11-4-测试本章代码)
    - 11.5 [总结](/ch11/#_11-5-总结) 
 - 附录 [指令表](/excursus/)
@@ -222,11 +222,11 @@ ISBN：978-7-111-53413-6
 ::: warning
 链接由正则替换生成
 ```$xslt
-\-\s(\d{1,2})\.(\d+)\s([\u4e00-\u9fa5_a-zA-Z0-9\.\（）、]+)
+\-\s(\d{1,2})\.(\d+)\s([\u4e00-\u9fa5_a-zA-Z0-9\.\()、]+)
 - $1.$2 [$3](/ch$1/#_$1-$2-$3)
 ```
 ```$xslt
-\-\s(\d{1,2})\.(\d+)\.(\d+)?\s([\u4e00-\u9fa5_a-zA-Z0-9\.\（）、]+)
+\-\s(\d{1,2})\.(\d+)\.(\d+)?\s([\u4e00-\u9fa5_a-zA-Z0-9\.\()、]+)
 - $1.$2.$3 [$4](/ch$1/#_$1-$2-$3-$4)
 ```
 :::

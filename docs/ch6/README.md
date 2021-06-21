@@ -76,7 +76,7 @@ const (
 ```
 回到Class结构体。name、superClassName和interfaceNames字段分别存放类名、超类名和接口名。注意这些类名都是完全限定名，具有java/lang/Object的形式。constantPool字段存放运行时常量池指针，fields和methods字段分别存放字段表和方法表。运行时常量池将在6.2节中详细介绍。 
 
-继续编辑class.go文件，在其中定义newClass（）函数，用来把ClassFile结构体转换成Class结构体，代码如下：
+继续编辑class.go文件，在其中定义newClass()函数，用来把ClassFile结构体转换成Class结构体，代码如下：
 ```go
 func newClass(cf *classfile.ClassFile) *Class { 
     class := &Class{} 
@@ -90,7 +90,7 @@ func newClass(cf *classfile.ClassFile) *Class {
     return class 
 } 
 ```
-newClass（）函数又调用了newConstantPool（）、newFields（）和newMethods（），这三个函数的代码将在后面的小节给出。继续编辑class.go文件，在其中定义8个方法，用来判断某个访问标志是否被设置。这8个方法都很简单，为了节约篇幅，这里只给出IsPublic（）方法的代码。
+newClass()函数又调用了newConstantPool()、newFields()和newMethods()，这三个函数的代码将在后面的小节给出。继续编辑class.go文件，在其中定义8个方法，用来判断某个访问标志是否被设置。这8个方法都很简单，为了节约篇幅，这里只给出IsPublic()方法的代码。
 ```go
 func (self *Class) IsPublic() bool { 
     return 0 != self.accessFlags&ACC_PUBLIC 
@@ -98,7 +98,7 @@ func (self *Class) IsPublic() bool {
 ```
 后面将要介绍的Field和Method结构体也有类似的方法，届时也将不再赘述，请读者注意。
 ##### 6.1.2 字段信息 
-字段和方法都属于类的成员，它们有一些相同的信息（访问标志、名字、描述符）。为了避免重复代码，创建一个结构体存放这些信息。在ch06\rtda\heap目录下创建lass_member.go文件，在其中定义ClassMember结构体，代码如下：
+字段和方法都属于类的成员，它们有一些相同的信息(访问标志、名字、描述符)。为了避免重复代码，创建一个结构体存放这些信息。在ch06\rtda\heap目录下创建lass_member.go文件，在其中定义ClassMember结构体，代码如下：
 ```go
 package heap 
 import "jvmgo/ch06/classfile" 
@@ -110,7 +110,7 @@ type ClassMember struct {
 }
 func (self *ClassMember) copyMemberInfo(memberInfo *classfile.MemberInfo) {...} 
 ```
-前面三个字段的含义很明显，这里不多解释。class字段存放Class结构体指针，这样可以通过字段或方法访问到它所属的类。copyMemberInfo（）方法从class文件中复制数据，代码如下：
+前面三个字段的含义很明显，这里不多解释。class字段存放Class结构体指针，这样可以通过字段或方法访问到它所属的类。copyMemberInfo()方法从class文件中复制数据，代码如下：
 ```go
 func (self *ClassMember) copyMemberInfo(memberInfo *classfile.MemberInfo) { 
     self.accessFlags = memberInfo.AccessFlags() 
@@ -127,7 +127,7 @@ type Field struct {
 }
 func newFields(class *Class, cfFields []*classfile.MemberInfo) []*Field {...}
 ```
-Field结构体比较简单，目前所有信息都是从ClassMember中继承过来的。newFields（）函数根据class文件的字段信息创建字段表，代码如下：
+Field结构体比较简单，目前所有信息都是从ClassMember中继承过来的。newFields()函数根据class文件的字段信息创建字段表，代码如下：
 ```go
 func newFields(class *Class, cfFields []*classfile.MemberInfo) []*Field { 
     fields := make([]*Field, len(cfFields)) 
@@ -152,7 +152,7 @@ type Method struct {
 }
 func newMethods(class *Class, cfMethods []*classfile.MemberInfo) []*Method {...} 
 ```
-maxStack和maxLocals字段分别存放操作数栈和局部变量表大小，这两个值是由Java编译器计算好的。code字段存放方法字节码。newMethods（）函数根据class文件中的方法信息创建Method表，代码如下： 
+maxStack和maxLocals字段分别存放操作数栈和局部变量表大小，这两个值是由Java编译器计算好的。code字段存放方法字节码。newMethods()函数根据class文件中的方法信息创建Method表，代码如下： 
 ```go
 func newMethods(class *Class, cfMethods []*classfile.MemberInfo) []*Method { 
     methods := make([]*Method, len(cfMethods)) 
@@ -165,7 +165,7 @@ func newMethods(class *Class, cfMethods []*classfile.MemberInfo) []*Method {
     return methods 
 }
 ```
-大家还记得吗？maxStack、maxLocals和字节码在class文件中是以属性的形式存储在method_info结构中的。如果读者已经忘记的话，可以参考3.4.5小节。copyAttributes（）方法从method_info结构中提取这些信息，代码如下：
+大家还记得吗？maxStack、maxLocals和字节码在class文件中是以属性的形式存储在method_info结构中的。如果读者已经忘记的话，可以参考3.4.5小节。copyAttributes()方法从method_info结构中提取这些信息，代码如下：
 ```go
 func (self *Method) copyAttributes(cfMethod *classfile.MemberInfo) { 
     if codeAttr := cfMethod.CodeAttribute(); codeAttr != nil { 
@@ -181,7 +181,7 @@ func (self *Method) copyAttributes(cfMethod *classfile.MemberInfo) {
 ##### 6.1.4 其他信息 
 Class结构体还有几个字段没有说明。loader字段存放类加载器指针，superClass和interfaces字段存放类的超类和接口指针，这三个字段将在6.3节介绍。staticSlotCount和instanceSlotCount字段分别存放类变量和实例变量占据的空间大小，staticVars字段存放静态变量，这三个字段将在6.4节介绍。
 #### 6.2 运行时常量池 
-运行时常量池主要存放两类信息：字面量（literal）和符号引用（symbolic reference）。字面量包括整数、浮点数和字符串字面量；符号引用包括类符号引用、字段符号引用、方法符号引用和接口方法符号引用。在ch06\rtda\heap目录下创建constant_pool.go文件，在其中定义Constant接口和ConstantPool结构体，代码如下：
+运行时常量池主要存放两类信息：字面量(literal)和符号引用(symbolic reference)。字面量包括整数、浮点数和字符串字面量；符号引用包括类符号引用、字段符号引用、方法符号引用和接口方法符号引用。在ch06\rtda\heap目录下创建constant_pool.go文件，在其中定义Constant接口和ConstantPool结构体，代码如下：
 ```go
 package heap 
 import "fmt" 
@@ -194,7 +194,7 @@ type ConstantPool struct {
 func newConstantPool(class *Class, cfCp classfile.ConstantPool) *ConstantPool {...} 
 func (self *ConstantPool) GetConstant(index uint) Constant {...} 
 ```
-GetConstant（）方法根据索引返回常量，代码如下： 
+GetConstant()方法根据索引返回常量，代码如下： 
 ```go
 func (self *ConstantPool) GetConstant(index uint) Constant { 
     if c := self.consts[index]; c != nil { 
@@ -203,7 +203,7 @@ func (self *ConstantPool) GetConstant(index uint) Constant {
     panic(fmt.Sprintf("No constants at index %d", index)) 
 } 
 ```
-newConstantPool（）函数把class文件中的常量池转换成运行时常量池。这个函数稍微有点复杂，主体代码如下：
+newConstantPool()函数把class文件中的常量池转换成运行时常量池。这个函数稍微有点复杂，主体代码如下：
 ```go
 func newConstantPool(class *Class, cfCp classfile.ConstantPool) *ConstantPool { 
     cpCount := len(cfCp) 
@@ -292,7 +292,7 @@ type ClassRef struct {
 func newClassRef(cp *ConstantPool, 
 classInfo *classfile.ConstantClassInfo) *ClassRef {...} 
 ```
-ClassRef继承了SymRef，但是并没有添加任何字段。newClassRef（）函数根据class文件中存储的类常量创建ClassRef实例，代码如下：
+ClassRef继承了SymRef，但是并没有添加任何字段。newClassRef()函数根据class文件中存储的类常量创建ClassRef实例，代码如下：
 ```go
 func newClassRef(cp *ConstantPool, classInfo *classfile.ConstantClassInfo) *ClassRef { 
     ref := &ClassRef{} 
@@ -314,7 +314,7 @@ type MemberRef struct {
 }
 func (self *MemberRef) copyMemberRefInfo(refInfo *classfile.ConstantMemberrefInfo) {...} 
 ```
-读者可能会有疑问：在Java中，我们并不能在同一个类中定义名字相同，但类型不同的两个字段，那么字段符号引用为什么还要存放字段描述符呢？答案是，这只是Java语言的限制，而不是Java虚拟机规范的限制。也就是说，站在Java虚拟机的角度，一个类是完全可以有多个同名字段的，只要它们的类型互不相同就可以。copyMemberRefInfo（）方法从class文件内存储的字段或方法常量中提取数据，代码如下：
+读者可能会有疑问：在Java中，我们并不能在同一个类中定义名字相同，但类型不同的两个字段，那么字段符号引用为什么还要存放字段描述符呢？答案是，这只是Java语言的限制，而不是Java虚拟机规范的限制。也就是说，站在Java虚拟机的角度，一个类是完全可以有多个同名字段的，只要它们的类型互不相同就可以。copyMemberRefInfo()方法从class文件内存储的字段或方法常量中提取数据，代码如下：
 ```go
 func (self *MemberRef) copyMemberRefInfo(refInfo *classfile.ConstantMemberrefInfo) { 
     self.className = refInfo.ClassName() 
@@ -332,7 +332,7 @@ type FieldRef struct {
 func newFieldRef(cp *ConstantPool, 
 refInfo *classfile.ConstantFieldrefInfo) *FieldRef {...} 
 ```
-field字段缓存解析后的字段指针，newFieldRef（）方法创建FieldRef实例，代码如下： 
+field字段缓存解析后的字段指针，newFieldRef()方法创建FieldRef实例，代码如下： 
 ```go
 func newFieldRef(cp *ConstantPool, refInfo *classfile.ConstantFieldrefInfo) *FieldRef { 
     ref := &FieldRef{} 
@@ -393,7 +393,7 @@ type ClassLoader struct {
 func NewClassLoader(cp *classpath.Classpath) *ClassLoader {...} 
 func (self *ClassLoader) LoadClass(name string) *Class {...} 
 ```
-ClassLoader依赖Classpath来搜索和读取class文件，cp字段保存Classpath指针。classMap字段记录已经加载的类数据，key是类的完全限定名。在前面讨论中，方法区一直只是个抽象的概念，现在可以把classMap字段当作方法区的具体实现。NewClassLoader（）函数创建ClassLoader实例，代码比较简单，如下所示：
+ClassLoader依赖Classpath来搜索和读取class文件，cp字段保存Classpath指针。classMap字段记录已经加载的类数据，key是类的完全限定名。在前面讨论中，方法区一直只是个抽象的概念，现在可以把classMap字段当作方法区的具体实现。NewClassLoader()函数创建ClassLoader实例，代码比较简单，如下所示：
 ```go 
 func NewClassLoader(cp *classpath.Classpath) *ClassLoader { 
     return &ClassLoader{ 
@@ -402,7 +402,7 @@ func NewClassLoader(cp *classpath.Classpath) *ClassLoader {
     }
 } 
 ```
-LoadClass（）方法把类数据加载到方法区，代码如下：
+LoadClass()方法把类数据加载到方法区，代码如下：
 ```go
 func (self *ClassLoader) LoadClass(name string) *Class { 
     if class, ok := self.classMap[name]; ok { 
@@ -411,7 +411,7 @@ func (self *ClassLoader) LoadClass(name string) *Class {
     return self.loadNonArrayClass(name) 
 }
 ```
-先查找classMap，看类是否已经被加载。如果是，直接返回类数据，否则调用loadNonArrayClass（）方法加载类。数组类和普通类有很大的不同，它的数据并不是来自class文件，而是由Java虚拟机在运行期间生成。本章暂不考虑数组类的加载，留到第8章详细讨论。loadNonArrayClass（）方法的代码如下：
+先查找classMap，看类是否已经被加载。如果是，直接返回类数据，否则调用loadNonArrayClass()方法加载类。数组类和普通类有很大的不同，它的数据并不是来自class文件，而是由Java虚拟机在运行期间生成。本章暂不考虑数组类的加载，留到第8章详细讨论。loadNonArrayClass()方法的代码如下：
 ```go
 func (self *ClassLoader) loadNonArrayClass(name string) *Class { 
     data, entry := self.readClass(name) 
@@ -422,8 +422,8 @@ func (self *ClassLoader) loadNonArrayClass(name string) *Class {
 }
 ```
 可以看到，类的加载大致可以分为三个步骤：首先找到class文件并把数据读取到内存；然后解析class文件，生成虚拟机可以使用的类数据，并放入方法区；最后进行链接。下面分别讨论这三个步骤。
-##### 6.3.1 readClass（） 
-readClass（）方法的代码如下：
+##### 6.3.1 readClass() 
+readClass()方法的代码如下：
 ```go
 func (self *ClassLoader) readClass(name string) ([]byte, classpath.Entry) { 
     data, entry, err := self.cp.ReadClass(name) 
@@ -433,9 +433,9 @@ func (self *ClassLoader) readClass(name string) ([]byte, classpath.Entry) {
     return data, entry 
 } 
 ```
-readClass（）方法只是调用了Classpath的ReadClass（）方法，并进行了错误处理。需要解释一下它的返回值。为了打印类加载信息，把最终加载class文件的类路径项也返回给了调用者。
-##### 6.3.2 defineClass（） 
-defineClass（）方法的代码如下：
+readClass()方法只是调用了Classpath的ReadClass()方法，并进行了错误处理。需要解释一下它的返回值。为了打印类加载信息，把最终加载class文件的类路径项也返回给了调用者。
+##### 6.3.2 defineClass() 
+defineClass()方法的代码如下：
 ```go
 func (self *ClassLoader) defineClass(data []byte) *Class { 
     class := parseClass(data) 
@@ -446,7 +446,7 @@ func (self *ClassLoader) defineClass(data []byte) *Class {
     return class 
 }
 ```
-defineClass（）方法首先调用parseClass（）函数把class文件数据转换成Class结构体。Class结构体的superClass和interfaces字段存放超类名和直接接口表，这些类名其实都是符号引用。根据Java虚拟机规范的5.3.5节，调用resolveSuperClass（）和resolveInterfaces（）函数解析这些类符号引用。下面是parseClass（）函数的代码。
+defineClass()方法首先调用parseClass()函数把class文件数据转换成Class结构体。Class结构体的superClass和interfaces字段存放超类名和直接接口表，这些类名其实都是符号引用。根据Java虚拟机规范的5.3.5节，调用resolveSuperClass()和resolveInterfaces()函数解析这些类符号引用。下面是parseClass()函数的代码。
 ```go 
 func parseClass(data []byte) *Class { 
     cf, err := classfile.Parse(data) 
@@ -456,7 +456,7 @@ func parseClass(data []byte) *Class {
     return newClass(cf) // 见6.1.1小节 
 }
 ```
-resolveSuperClass（）函数的代码如下：
+resolveSuperClass()函数的代码如下：
 ```go
 func resolveSuperClass(class *Class) { 
     if class.name != "java/lang/Object" { 
@@ -464,7 +464,7 @@ func resolveSuperClass(class *Class) {
     } 
 }
 ```
-再复习一下：除java.lang.Object以外，所有的类都有且仅有一个超类。因此，除非是Object类，否则需要递归调用LoadClass（）方法加载它的超类。与此类似，resolveInterfaces（）函数递归调用LoadClass（）方法加载类的每一个直接接口，代码如下：
+再复习一下：除java.lang.Object以外，所有的类都有且仅有一个超类。因此，除非是Object类，否则需要递归调用LoadClass()方法加载它的超类。与此类似，resolveInterfaces()函数递归调用LoadClass()方法加载类的每一个直接接口，代码如下：
 ```go
 func resolveInterfaces(class *Class) { 
     interfaceCount := len(class.interfaceNames) 
@@ -476,21 +476,21 @@ func resolveInterfaces(class *Class) {
     } 
 }
 ```
-##### 6.3.3 link（） 
-类的链接分为验证和准备两个必要阶段，link（）方法的代码如下：
+##### 6.3.3 link() 
+类的链接分为验证和准备两个必要阶段，link()方法的代码如下：
 ```go
 func link(class *Class) { 
     verify(class) 
     prepare(class) 
 } 
 ```
-为了确保安全性，Java虚拟机规范要求在执行类的任何代码之前，对类进行严格的验证。由于篇幅的原因，本书忽略验证过程。Java虚拟机规范4.10节详细介绍了类的验证算法，感兴趣的读者可以尝试自己实现。verify（）函数空空如也，代码如下：
+为了确保安全性，Java虚拟机规范要求在执行类的任何代码之前，对类进行严格的验证。由于篇幅的原因，本书忽略验证过程。Java虚拟机规范4.10节详细介绍了类的验证算法，感兴趣的读者可以尝试自己实现。verify()函数空空如也，代码如下：
 ```go
 func verify(class *Class) { 
     // todo 
 }
 ```
-准备阶段主要是给类变量分配空间并给予初始值，prepare（）函数推迟到6.4节再介绍。
+准备阶段主要是给类变量分配空间并给予初始值，prepare()函数推迟到6.4节再介绍。
 #### 6.4 对象、实例变量和类变量 
 在第4章中，定义了LocalVars结构体，用来表示局部变量表。从逻辑上来看，LocalVars实例就像一个数组，这个数组的每一个元素都足够容纳一个int、float或引用值。要放入double或者long值，需要相邻的两个元素。这个结构体不是正好也可以用来表示类变量和实例变量吗？ 
 
@@ -541,7 +541,7 @@ type Field struct {
     slotId uint 
 } 
 ```
-打开class_loader.go文件，在其中定义prepare（）函数，代码如下：
+打开class_loader.go文件，在其中定义prepare()函数，代码如下：
 ```go
 func prepare(class *Class) { 
     calcInstanceFieldSlotIds(class)
@@ -549,7 +549,7 @@ func prepare(class *Class) {
     allocAndInitStaticVars(class) 
 }
 ```
-calcInstanceFieldSlotIds（）函数计算实例字段的个数，同时给它们编号，代码如下：
+calcInstanceFieldSlotIds()函数计算实例字段的个数，同时给它们编号，代码如下：
 ```go
 func calcInstanceFieldSlotIds(class *Class) { 
     slotId := uint(0) 
@@ -568,7 +568,7 @@ func calcInstanceFieldSlotIds(class *Class) {
     class.instanceSlotCount = slotId 
 }
 ```
-calcStaticFieldSlotIds（）函数计算静态字段的个数，同时给它们编号，代码如下：
+calcStaticFieldSlotIds()函数计算静态字段的个数，同时给它们编号，代码如下：
 ```go
 func calcStaticFieldSlotIds(class *Class) { 
     slotId := uint(0) 
@@ -584,13 +584,13 @@ func calcStaticFieldSlotIds(class *Class) {
     class.staticSlotCount = slotId 
 }
 ```
-Field结构体的isLongOrDouble（）方法返回字段是否是long或double类型，代码如下：
+Field结构体的isLongOrDouble()方法返回字段是否是long或double类型，代码如下：
 ```go
 func (self *Field) isLongOrDouble() bool { 
     return self.descriptor == "J" || self.descriptor == "D" 
 }
 ```
-allocAndInitStaticVars（）函数给类变量分配空间，然后给它们赋 
+allocAndInitStaticVars()函数给类变量分配空间，然后给它们赋 
 予初始值，代码如下：
 ```go
 func allocAndInitStaticVars(class *Class) { 
@@ -602,7 +602,7 @@ func allocAndInitStaticVars(class *Class) {
     } 
 }
 ```
-因为Go语言会保证新创建的Slot结构体有默认值（num字段是0，ref字段是nil），而浮点数0编码之后和整数0相同，所以不用做任何操作就可以保证静态变量有默认初始值（数字类型是0，引用类型是null）。如果静态变量属于基本类型或String类型，有final修饰符，且它的值在编译期已知，则该值存储在class文件常量池中。initStaticFinalVar（）函数从常量池中加载常量值，然后给静态变量赋值，代码如下：
+因为Go语言会保证新创建的Slot结构体有默认值(num字段是0，ref字段是nil)，而浮点数0编码之后和整数0相同，所以不用做任何操作就可以保证静态变量有默认初始值(数字类型是0，引用类型是null)。如果静态变量属于基本类型或String类型，有final修饰符，且它的值在编译期已知，则该值存储在class文件常量池中。initStaticFinalVar()函数从常量池中加载常量值，然后给静态变量赋值，代码如下：
 ```go
 func initStaticFinalVar(class *Class, field *Field) { 
     vars := class.staticVars 
@@ -629,7 +629,7 @@ func initStaticFinalVar(class *Class, field *Field) {
     } 
 }
 ```
-字符串常量将在第8章讨论，这里先调用panic（）函数终止程序执行。需要给Field结构体添加constValueIndex字段，代码如下： 
+字符串常量将在第8章讨论，这里先调用panic()函数终止程序执行。需要给Field结构体添加constValueIndex字段，代码如下： 
 
 ```go
 type Field struct {
@@ -638,7 +638,7 @@ type Field struct {
     slotId uint 
 }
 ```
-修改newFields（）方法，从字段属性表中读取constValueIndex，代码改动如下： 
+修改newFields()方法，从字段属性表中读取constValueIndex，代码改动如下： 
 ```go
 func newFields(class *Class, cfFields []*classfile.MemberInfo) []*Field { 
     fields := make([]*Field, len(cfFields)) 
@@ -651,7 +651,7 @@ func newFields(class *Class, cfFields []*classfile.MemberInfo) []*Field {
     return fields 
 } 
 ```
-copyAttributes（）方法的代码如下：
+copyAttributes()方法的代码如下：
 ```go
 func (self *Field) copyAttributes(cfField *classfile.MemberInfo) { 
     if valAttr := cfField.ConstantValueAttribute(); valAttr != nil { 
@@ -659,7 +659,7 @@ func (self *Field) copyAttributes(cfField *classfile.MemberInfo) {
     } 
 }
 ```
-MemberInfo结构体的ConstantValueIndex（）方法在ch06\classfile\member_info.go文件中，代码如下：
+MemberInfo结构体的ConstantValueIndex()方法在ch06\classfile\member_info.go文件中，代码如下：
 ```go
 func (self *MemberInfo) ConstantValueAttribute() *ConstantValueAttribute { 
     for _, attrInfo := range self.attributes { 
@@ -674,7 +674,7 @@ func (self *MemberInfo) ConstantValueAttribute() *ConstantValueAttribute {
 #### 6.5 类和字段符号引用解析 
 本节讨论类符号引用和字段符号引用的解析，方法符号引用的解析将在第7章讨论。
 ##### 6.5.1 类符号引用解析 
-打开cp_symref.go文件，在其中定义ResolvedClass（）方法，代码如下：
+打开cp_symref.go文件，在其中定义ResolvedClass()方法，代码如下：
 ```go
 func (self *SymRef) ResolvedClass() *Class { 
     if self.class == nil { 
@@ -683,7 +683,7 @@ func (self *SymRef) ResolvedClass() *Class {
     return self.class 
 }
 ```
-如果类符号引用已经解析，ResolvedClass（）方法直接返回类指针，否则调用resolveClassRef（）方法进行解析。Java虚拟机规范5.4.3.1节给出了类符号引用的解析步骤，resolveClassRef（）方法就是按照这个步骤编写的（有一些简化），代码如下：
+如果类符号引用已经解析，ResolvedClass()方法直接返回类指针，否则调用resolveClassRef()方法进行解析。Java虚拟机规范5.4.3.1节给出了类符号引用的解析步骤，resolveClassRef()方法就是按照这个步骤编写的(有一些简化)，代码如下：
 ```go
 func (self *SymRef) resolveClassRef() { 
     d := self.cp.class 
@@ -694,13 +694,13 @@ func (self *SymRef) resolveClassRef() {
     self.class = c 
 } 
 ```
-通俗地讲，如果类D通过符号引用N引用类C的话，要解析N，先用D的类加载器加载C，然后检查D是否有权限访问C，如果没有，则抛出IllegalAccessError异常。Java虚拟机规范5.4.4节给出了类的访问控制规则，把这个规则翻译成Class结构体的isAccessibleTo（）方法，代码如下（在class.go文件中）：
+通俗地讲，如果类D通过符号引用N引用类C的话，要解析N，先用D的类加载器加载C，然后检查D是否有权限访问C，如果没有，则抛出IllegalAccessError异常。Java虚拟机规范5.4.4节给出了类的访问控制规则，把这个规则翻译成Class结构体的isAccessibleTo()方法，代码如下(在class.go文件中)：
 ```go
 func (self *Class) isAccessibleTo(other *Class) bool { 
     return self.IsPublic() || self.getPackageName() ==	other.getPackageName() 
 } 
 ```
-也就是说，如果类D想访问类C，需要满足两个条件之一：C是public，或者C和D在同一个运行时包内。第11章再讨论运行时包，这里先简单按照包名来检查。getPackageName（）方法的代码如下（也在class.go文件中）： 
+也就是说，如果类D想访问类C，需要满足两个条件之一：C是public，或者C和D在同一个运行时包内。第11章再讨论运行时包，这里先简单按照包名来检查。getPackageName()方法的代码如下(也在class.go文件中)： 
 ```go
 func (self *Class) getPackageName() string { 
     if i := strings.LastIndex(self.name, "/"); i >= 0 { 
@@ -711,7 +711,7 @@ func (self *Class) getPackageName() string {
 ``` 
 比如类名是java/lang/Object，则它的包名就是java/lang。如果类定义在默认包中，它的包名是空字符串。
 ##### 6.5.2 字段符号引用解析 
-打开cp_fieldref.go文件，在其中定义ResolvedField（）方法，代码如下：
+打开cp_fieldref.go文件，在其中定义ResolvedField()方法，代码如下：
 ```go
 func (self *FieldRef) ResolvedField() *Field { 
     if self.field == nil { 
@@ -720,7 +720,7 @@ func (self *FieldRef) ResolvedField() *Field {
     return self.field 
 }
 ```
-ResolvedField（）方法与ResolvedClass（）方法大同小异，就不多解释了。Java虚拟机规范5.4.3.2节给出了字段符号引用的解析步骤，把它翻译成resolveFieldRef（）方法，代码如下：
+ResolvedField()方法与ResolvedClass()方法大同小异，就不多解释了。Java虚拟机规范5.4.3.2节给出了字段符号引用的解析步骤，把它翻译成resolveFieldRef()方法，代码如下：
 ```go
 func (self *FieldRef) resolveFieldRef() { 
     d := self.cp.class 
@@ -735,7 +735,7 @@ func (self *FieldRef) resolveFieldRef() {
     self.field = field 
 }
 ```
-如果类D想通过字段符号引用访问类C的某个字段，首先要解析符号引用得到类C，然后根据字段名和描述符查找字段。如果字段查找失败，则虚拟机抛出NoSuchFieldError异常。如果查找成功，但D没有足够的权限访问该字段，则虚拟机抛出IllegalAccessError异常。字段查找步骤在lookupField（）函数中，代码如下：
+如果类D想通过字段符号引用访问类C的某个字段，首先要解析符号引用得到类C，然后根据字段名和描述符查找字段。如果字段查找失败，则虚拟机抛出NoSuchFieldError异常。如果查找成功，但D没有足够的权限访问该字段，则虚拟机抛出IllegalAccessError异常。字段查找步骤在lookupField()函数中，代码如下：
 ```go
 func lookupField(c *Class, name, descriptor string) *Field { 
     for _, field := range c.fields { 
@@ -754,7 +754,7 @@ func lookupField(c *Class, name, descriptor string) *Field {
     return nil
 }
 ```
-首先在C的字段中查找。如果找不到，在C的直接接口递归应用这个查找过程。如果还找不到的话，在C的超类中递归应用这个查找过程。如果仍然找不到，则查找失败。Java虚拟机规范5.4.4节也给出了字段的访问控制规则。这个规则同样也适用于方法，所以把它（略做简化）实现成ClassMember结构体的isAccessibleTo（）方法，代码如下（在class_member.go文件中）： 
+首先在C的字段中查找。如果找不到，在C的直接接口递归应用这个查找过程。如果还找不到的话，在C的超类中递归应用这个查找过程。如果仍然找不到，则查找失败。Java虚拟机规范5.4.4节也给出了字段的访问控制规则。这个规则同样也适用于方法，所以把它(略做简化)实现成ClassMember结构体的isAccessibleTo()方法，代码如下(在class_member.go文件中)： 
 ```go
 func (self *ClassMember) isAccessibleTo(d *Class) bool { 
     if self.IsPublic() { 
@@ -770,7 +770,7 @@ func (self *ClassMember) isAccessibleTo(d *Class) bool {
     return d == c 
 }
 ```
-用通俗的语言描述字段访问规则。如果字段是public，则任何类都可以访问。如果字段是protected，则只有子类和同一个包下的类可以访问。如果字段有默认访问权限（非public，非protected，也非privated），则只有同一个包下的类可以访问。否则，字段是private，只有声明这个字段的类才能访问。
+用通俗的语言描述字段访问规则。如果字段是public，则任何类都可以访问。如果字段是protected，则只有子类和同一个包下的类可以访问。如果字段有默认访问权限(非public，非protected，也非privated)，则只有同一个包下的类可以访问。否则，字段是private，只有声明这个字段的类才能访问。
 #### 6.6 类和对象相关指令 
 本节将实现10条类和对象相关的指令。new指令用来创建类实例；putstatic和getstatic指令用于存取静态变量；putfield和getfield用于存取实例变量；instanceof和checkcast指令用于判断对象是否属于某种类型；ldc系列指令把运行时常量池中的常量推到操作数栈顶。下面的Java代码演示了这些指令的用处。 
 ```java
@@ -802,7 +802,7 @@ import "jvmgo/ch06/rtda/heap"
 // Create new object 
 type NEW struct{ base.Index16Instruction } 
 ```
-new指令的操作数是一个uint16索引，来自字节码。通过这个索引，可以从当前类的运行时常量池中找到一个类符号引用。解析这个类符号引用，拿到类数据，然后创建对象，并把对象引用推入栈顶，new指令的工作就完成了。Execute（）方法的代码如下：
+new指令的操作数是一个uint16索引，来自字节码。通过这个索引，可以从当前类的运行时常量池中找到一个类符号引用。解析这个类符号引用，拿到类数据，然后创建对象，并把对象引用推入栈顶，new指令的工作就完成了。Execute()方法的代码如下：
 ```go
 func (self *NEW) Execute(frame *rtda.Frame) { 
     cp := frame.Method().Class().ConstantPool() 
@@ -815,13 +815,13 @@ func (self *NEW) Execute(frame *rtda.Frame) {
     frame.OperandStack().PushRef(ref) 
 }
 ```
-因为接口和抽象类都不能实例化，所以如果解析后的类是接口或抽象类，按照Java虚拟机规范规定，需要抛出InstantiationError异常。另外，如果解析后的类还没有初始化，则需要先初始化类。在第7章实现方法调用之后会详细讨论类的初始化，这里暂时先忽略。Class结构体的NewObject（）方法如下（在class.go文件中）： 
+因为接口和抽象类都不能实例化，所以如果解析后的类是接口或抽象类，按照Java虚拟机规范规定，需要抛出InstantiationError异常。另外，如果解析后的类还没有初始化，则需要先初始化类。在第7章实现方法调用之后会详细讨论类的初始化，这里暂时先忽略。Class结构体的NewObject()方法如下(在class.go文件中)： 
 ```
 func (self *Class) NewObject() *Object { 
     return newObject(self) 
 } 
 ```
-这里只是调用了Object结构体的newObject（）方法，代码如下（在object.go中）： 
+这里只是调用了Object结构体的newObject()方法，代码如下(在object.go中)： 
 ```
 func newObject(class *Class) *Object { 
     return &Object{ 
@@ -841,7 +841,7 @@ import "jvmgo/ch06/rtda/heap"
 // Set static field in class 
 type PUT_STATIC struct{ base.Index16Instruction } 
 ```
-putstatic指令给类的某个静态变量赋值，它需要两个操作数。第一个操作数是uint16索引，来自字节码。通过这个索引可以从当前类的运行时常量池中找到一个字段符号引用，解析这个符号引用就可以知道要给类的哪个静态变量赋值。第二个操作数是要赋给静态变量的值，从操作数栈中弹出。Execute（）方法稍微有些复杂，分三部分介绍：
+putstatic指令给类的某个静态变量赋值，它需要两个操作数。第一个操作数是uint16索引，来自字节码。通过这个索引可以从当前类的运行时常量池中找到一个字段符号引用，解析这个符号引用就可以知道要给类的哪个静态变量赋值。第二个操作数是要赋给静态变量的值，从操作数栈中弹出。Execute()方法稍微有些复杂，分三部分介绍：
 ```go
 func (self *PUT_STATIC) Execute(frame *rtda.Frame) { 
     currentMethod := frame.Method() 
@@ -922,7 +922,7 @@ import "jvmgo/ch06/rtda/heap"
 // Set field in object 
 type PUT_FIELD struct{ base.Index16Instruction }
 ``` 
-putfield指令给实例变量赋值，它需要三个操作数。前两个操作数是常量池索引和变量值，用法和putstatic一样。第三个操作数是对象引用，从操作数栈中弹出。同样分三次来介绍putfield指令的Execute（）方法，第一部分代码如下：
+putfield指令给实例变量赋值，它需要三个操作数。前两个操作数是常量池索引和变量值，用法和putstatic一样。第三个操作数是对象引用，从操作数栈中弹出。同样分三次来介绍putfield指令的Execute()方法，第一部分代码如下：
 ```go
 func (self *PUT_FIELD) Execute(frame *rtda.Frame) { 
     currentMethod := frame.Method() 
@@ -944,7 +944,7 @@ func (self *PUT_FIELD) Execute(frame *rtda.Frame) {
     } 
 ```
 
-看起来也和putstatic差不多，但有两点不同（在代码中已经加粗）。第一，解析后的字段必须是实例字段，否则抛出IncompatibleClassChangeError。第二，如果是final字段，则只能在构造函数中初始化，否则抛出IllegalAccessError。在第7章会介绍构造函数。下面看剩下的代码： 
+看起来也和putstatic差不多，但有两点不同(在代码中已经加粗)。第一，解析后的字段必须是实例字段，否则抛出IncompatibleClassChangeError。第二，如果是final字段，则只能在构造函数中初始化，否则抛出IllegalAccessError。在第7章会介绍构造函数。下面看剩下的代码： 
 ```go
     descriptor := field.Descriptor() 
     slotId := field.SlotId() 
@@ -965,7 +965,7 @@ func (self *PUT_FIELD) Execute(frame *rtda.Frame) {
 }
 ```
 
-先根据字段类型从操作数栈中弹出相应的变量值，然后弹出对象引用。如果引用是null，需要抛出著名的空指针异常（NullPointerException），否则通过引用给实例变量赋值。其他的case语句和第一个大同小异，为了节约篇幅，省略了详细代码。 
+先根据字段类型从操作数栈中弹出相应的变量值，然后弹出对象引用。如果引用是null，需要抛出著名的空指针异常(NullPointerException)，否则通过引用给实例变量赋值。其他的case语句和第一个大同小异，为了节约篇幅，省略了详细代码。 
 putfield指令解释完毕，下面来看getfield指令。在references目录下创建getfield.go文件，在其中实现getfield指令，代码如下：
 ```go
 package references 
@@ -975,7 +975,7 @@ import "jvmgo/ch06/rtda/heap"
 // Fetch field from object 
 type GET_FIELD struct{ base.Index16Instruction } 
 ```
-getfield指令获取对象的实例变量值，然后推入操作数栈，它需要两个操作数。第一个操作数是uint16索引，用法和前面三个指令一样。第二个操作数是对象引用，用法和putfield一样。下面看看getfield指令的Execute方法（），第一部分代码如下：
+getfield指令获取对象的实例变量值，然后推入操作数栈，它需要两个操作数。第一个操作数是uint16索引，用法和前面三个指令一样。第二个操作数是对象引用，用法和putfield一样。下面看看getfield指令的Execute方法()，第一部分代码如下：
 ```go
 func (self *GET_FIELD) Execute(frame *rtda.Frame) { 
     cp := frame.Method().Class().ConstantPool() 
@@ -1011,7 +1011,7 @@ func (self *GET_FIELD) Execute(frame *rtda.Frame) {
 
 根据字段类型，获取相应的实例变量值，然后推入操作数栈。至此，getfield指令也解释完毕了。下面讨论instanceof和checkcast指令。
 ##### 6.6.4 instanceof和checkcast指令 
-instanceof指令判断对象是否是某个类的实例（或者对象的类是否实现了某个接口），并把结果推入操作数栈。在references目录下创建instanceof.go文件，在其中实现instanceof指令，代码如下：
+instanceof指令判断对象是否是某个类的实例(或者对象的类是否实现了某个接口)，并把结果推入操作数栈。在references目录下创建instanceof.go文件，在其中实现instanceof指令，代码如下：
 ```go
 package references 
 import "jvmgo/ch06/instructions/base" 
@@ -1020,7 +1020,7 @@ import "jvmgo/ch06/rtda/heap"
 // Determine if object is of given type 
 type INSTANCE_OF struct{ base.Index16Instruction } 
 ```
-instanceof指令需要两个操作数。第一个操作数是uint16索引，从方法的字节码中获取，通过这个索引可以从当前类的运行时常量池中找到一个类符号引用。第二个操作数是对象引用，从操作数栈中弹出。instanceof指令的Execute（）方法如下：
+instanceof指令需要两个操作数。第一个操作数是uint16索引，从方法的字节码中获取，通过这个索引可以从当前类的运行时常量池中找到一个类符号引用。第二个操作数是对象引用，从操作数栈中弹出。instanceof指令的Execute()方法如下：
 ```go
 func (self *INSTANCE_OF) Execute(frame *rtda.Frame) { 
     stack := frame.OperandStack() 
@@ -1043,7 +1043,7 @@ func (self *INSTANCE_OF) Execute(frame *rtda.Frame) {
 ```go
 if (obj instanceof ClassYYY) {...} 
 ```
-如果对象引用不是null，则解析类符号引用，判断对象是否是类的实例，然后把判断结果推入操作数栈。Java虚拟机规范给出了具体的判断步骤，我们在Object结构体的IsInstanceOf（）方法中实现，稍后给出代码。下面来看checkcast指令。在references目录下创建checkcast.go文件，在其中实现checkcast指令，代码如下：
+如果对象引用不是null，则解析类符号引用，判断对象是否是类的实例，然后把判断结果推入操作数栈。Java虚拟机规范给出了具体的判断步骤，我们在Object结构体的IsInstanceOf()方法中实现，稍后给出代码。下面来看checkcast指令。在references目录下创建checkcast.go文件，在其中实现checkcast指令，代码如下：
 ```go
 package references 
 import "jvmgo/ch06/instructions/base" 
@@ -1052,7 +1052,7 @@ import "jvmgo/ch06/rtda/heap"
 // Check whether object is of given type 
 type CHECK_CAST struct{ base.Index16Instruction } 
 ```
-checkcast指令和instanceof指令很像，区别在于：instanceof指令会改变操作数栈（弹出对象引用，推入判断结果）；checkcast则不改变操作数栈（如果判断失败，直接抛出ClassCastException异常）。checkcast指令的Execute（）方法如下： 
+checkcast指令和instanceof指令很像，区别在于：instanceof指令会改变操作数栈(弹出对象引用，推入判断结果)；checkcast则不改变操作数栈(如果判断失败，直接抛出ClassCastException异常)。checkcast指令的Execute()方法如下： 
 ```go
 func (self *CHECK_CAST) Execute(frame *rtda.Frame) { 
     stack := frame.OperandStack() 
@@ -1076,13 +1076,13 @@ func (self *CHECK_CAST) Execute(frame *rtda.Frame) {
         // use yyy 
     } 
 ```
-Object结构体的IsInstanceOf（）方法的代码如下（在object.go文件中）：
+Object结构体的IsInstanceOf()方法的代码如下(在object.go文件中)：
 ```go
 func (self *Object) IsInstanceOf(class *Class) bool { 
     return class.isAssignableFrom(self.class) 
 } 
 ```
-真正的逻辑在Class结构体的isAssignableFrom（）方法中，这个方法稍微有些复杂，为了避免class.go文件变得过长，把它写在另一个文件中。在ch06\rtda\heap目录下创建class_hierarchy.go文件，在其中定义isAssignableFrom（）方法，代码如下：
+真正的逻辑在Class结构体的isAssignableFrom()方法中，这个方法稍微有些复杂，为了避免class.go文件变得过长，把它写在另一个文件中。在ch06\rtda\heap目录下创建class_hierarchy.go文件，在其中定义isAssignableFrom()方法，代码如下：
 ```go
 func (self *Class) isAssignableFrom(other *Class) bool { 
     s, t := other, self 
@@ -1096,7 +1096,7 @@ func (self *Class) isAssignableFrom(other *Class) bool {
     } 
 } 
 ```
-也就是说，在三种情况下，S类型的引用值可以赋值给T类型：S和T是同一类型；T是类且S是T的子类；或者T是接口且S实现了T接口。这是简化版的判断逻辑，因为还没有实现数组，第8章讨论数组时会继续完善这个方法。继续编辑class_hierarchy.go文件，在其中实现isSubClassOf（）方法，代码如下：
+也就是说，在三种情况下，S类型的引用值可以赋值给T类型：S和T是同一类型；T是类且S是T的子类；或者T是接口且S实现了T接口。这是简化版的判断逻辑，因为还没有实现数组，第8章讨论数组时会继续完善这个方法。继续编辑class_hierarchy.go文件，在其中实现isSubClassOf()方法，代码如下：
 ```go
 func (self *Class) isSubClassOf(other *Class) bool { 
     for c := self.superClass; c != nil; c = c.superClass { 
@@ -1107,7 +1107,7 @@ func (self *Class) isSubClassOf(other *Class) bool {
     return false 
 }
 ``` 
-判断S是否是T的子类，实际上也就是判断T是否是S的（直接或间接）超类。继续编辑class_hierarchy.go文件，在其中实现isImplements（）方法，代码如下：
+判断S是否是T的子类，实际上也就是判断T是否是S的(直接或间接)超类。继续编辑class_hierarchy.go文件，在其中实现isImplements()方法，代码如下：
 ```go
 func (self *Class) isImplements(iface *Class) bool { 
     for c := self; c != nil; c = c.superClass { 
@@ -1120,7 +1120,7 @@ func (self *Class) isImplements(iface *Class) bool {
     return false 
 }
 ```
-判断S是否实现了T接口，就看S或S的（直接或间接）超类是否实现了某个接口T'，T'要么是T，要么是T的子接口。isSubInterfaceOf（）方法也在class_hierarchy.go文件中，代码如下：
+判断S是否实现了T接口，就看S或S的(直接或间接)超类是否实现了某个接口T'，T'要么是T，要么是T的子接口。isSubInterfaceOf()方法也在class_hierarchy.go文件中，代码如下：
 ```go
 func (self *Class) isSubInterfaceOf(iface *Class) bool { 
     for _, superInterface := range self.interfaces { 
@@ -1132,7 +1132,7 @@ func (self *Class) isSubInterfaceOf(iface *Class) bool {
 }
 ```
 
-isSubInterfaceOf（）方法和isSubClassOf（）方法类似，但是用到了递归，这里不多解释了。到此为止，instanceof和checkcast指令就介绍完毕了，下面来看ldc指令。
+isSubInterfaceOf()方法和isSubClassOf()方法类似，但是用到了递归，这里不多解释了。到此为止，instanceof和checkcast指令就介绍完毕了，下面来看ldc指令。
 ##### 6.6.5 ldc指令 
 ldc系列指令从运行时常量池中加载常量值，并把它推入操作数栈。ldc系列指令属于常量类指令，共3条。其中ldc和ldc_w指令用于加载int、float和字符串常量，java.lang.Class实例或者MethodType和MethodHandle实例。ldc2_w指令用于加载long和double常量。ldc和ldc_w指令的区别仅在于操作数的宽度。 
 
@@ -1147,7 +1147,7 @@ type LDC struct{ base.Index8Instruction }
 type LDC_W struct{ base.Index16Instruction } 
 type LDC2_W struct{ base.Index16Instruction }
 ```
-ldc和ldc_w指令的逻辑完全一样，在_ldc（）函数中实现，代码如下：
+ldc和ldc_w指令的逻辑完全一样，在_ldc()函数中实现，代码如下：
 ```go
 func (self *LDC) Execute(frame *rtda.Frame) { 
     _ldc(frame, self.Index) 
@@ -1156,7 +1156,7 @@ func (self *LDC_W) Execute(frame *rtda.Frame) {
     _ldc(frame, self.Index) 
 } 
 ```
-_ldc（）函数的代码如下：
+_ldc()函数的代码如下：
 ```go
 func _ldc(frame *rtda.Frame, index uint) { 
     stack := frame.OperandStack() 
@@ -1171,7 +1171,7 @@ func _ldc(frame *rtda.Frame, index uint) {
     } 
 }
 ```
-先从当前类的运行时常量池中取出常量。如果是int或float常量，则提取出常量值，则推入操作数栈。其他情况还无法处理，暂时调用panic（）函数终止程序执行。ldc_2w指令的Execute（）方法单独实现，代码如下：
+先从当前类的运行时常量池中取出常量。如果是int或float常量，则提取出常量值，则推入操作数栈。其他情况还无法处理，暂时调用panic()函数终止程序执行。ldc_2w指令的Execute()方法单独实现，代码如下：
 ```go
 func (self *LDC2_W) Execute(frame *rtda.Frame) { 
     stack := frame.OperandStack() 
@@ -1184,7 +1184,7 @@ func (self *LDC2_W) Execute(frame *rtda.Frame) {
     } 
 }
 ```
-代码比较简单，不多解释，这里重点说一下Frame结构体的Method（）方法。为了通过frame变量拿到当前类的运行时常量池，给Frame结构体添加了method字段，代码如下： 
+代码比较简单，不多解释，这里重点说一下Frame结构体的Method()方法。为了通过frame变量拿到当前类的运行时常量池，给Frame结构体添加了method字段，代码如下： 
 ```go
 type Frame struct { 
     lower *Frame 
@@ -1195,7 +1195,7 @@ type Frame struct {
     nextPC int 
 } 
 ```
-Method（）是Getter方法，就不给出代码了。newFrame（）函数有相应变化，代码如下：
+Method()是Getter方法，就不给出代码了。newFrame()函数有相应变化，代码如下：
 ```go
 func newFrame(thread *Thread, method *heap.Method) *Frame { 
     return &Frame{ 
@@ -1216,7 +1216,7 @@ import "strings"
 import "jvmgo/ch06/classpath" 
 import "jvmgo/ch06/rtda/heap" 
 ```
-main（）函数不变，删掉其他函数，然后修改startJVM（）函数，代码如下：
+main()函数不变，删掉其他函数，然后修改startJVM()函数，代码如下：
 ```go
 func startJVM(cmd *Cmd) { 
     cp := classpath.Parse(cmd.XjreOption, cmd.cpOption) 
@@ -1231,13 +1231,13 @@ func startJVM(cmd *Cmd) {
     } 
 } 
 ```
-先创建ClassLoader实例，然后用它来加载主类，最后执行主类的main（）方法。Class结构体的GetMainMethod（）方法如下（在ch06\rtda\heap\class.go文件中）： 
+先创建ClassLoader实例，然后用它来加载主类，最后执行主类的main()方法。Class结构体的GetMainMethod()方法如下(在ch06\rtda\heap\class.go文件中)： 
 ```go
 func (self *Class) GetMainMethod() *Method { 
     return self.getStaticMethod("main", "([Ljava/lang/String;)V")
 }
 ``` 
-它只是调用了getStaticMethod（）方法而已，代码如下：
+它只是调用了getStaticMethod()方法而已，代码如下：
 ```go
 func (self *Class) getStaticMethod(name, descriptor string) *Method { 
     for _, method := range self.methods { 
@@ -1257,7 +1257,7 @@ import "jvmgo/ch06/instructions/base"
 import "jvmgo/ch06/rtda" 
 import "jvmgo/ch06/rtda/heap" 
 ```
-其他函数不变，只修改interpret（）函数，代码如下：
+其他函数不变，只修改interpret()函数，代码如下：
 ```go
 func interpret(method *heap.Method) { 
     thread := rtda.NewThread() 
@@ -1267,7 +1267,7 @@ func interpret(method *heap.Method) {
     loop(thread, method.Code()) 
 }
 ```
-Thread结构体的NewFrame（）方法如下（在ch06\rtda\thread.go文件中）： 
+Thread结构体的NewFrame()方法如下(在ch06\rtda\thread.go文件中)： 
 ```go
 func (self *Thread) NewFrame(method *heap.Method) *Frame { 
     return newFrame(self, method) 
@@ -1344,9 +1344,9 @@ go install jvmgo\ch06
 
 命令执行完毕后，D：\go\workspace\bin目录会出现ch06.exe文件。用javac编译MyObject类，然后用ch06.exe执行MyObject程序，结果如图6-3和图6-4所示。 
 ![6-3](./img/6-3.png)  
-图6-3 MyObject程序执行结果（1）
+图6-3 MyObject程序执行结果(1)
 ![6-4](./img/6-4.png)  
-图6-4 MyObject程序执行结果（2）
+图6-4 MyObject程序执行结果(2)
 #### 6.8 本章小结 
 本章实现了方法区、运行时常量池、类和对象结构体、一个简单的类加载器，以及ldc和部分引用类指令。下一章将讨论方法调用和返回，到时就可以执行更加复杂的方法了。
 

@@ -17,13 +17,13 @@ D:\go\workspace\src
 ```
 
 #### 5.1 字节码和指令集 
-Java虚拟机顾名思义，就是一台虚拟的机器，而字节码（bytecode）就是运行在这台虚拟机器上的机器码。我们已经知道，每一个类或者接口都会被Java编译器编译成一个class文件，类或接口的方法信息就放在class文件的method_info结构中 [1] 。如果方法不是抽象的，也不是本地方法，方法的Java代码就会被编译器编译成字节码（即使方法是空的，编译器也会生成一条return语句），存放在method_info结构的Code属性中。仍以第3章的ClassFileTest类为例，其main（）方法如图5-1所示。
+Java虚拟机顾名思义，就是一台虚拟的机器，而字节码(bytecode)就是运行在这台虚拟机器上的机器码。我们已经知道，每一个类或者接口都会被Java编译器编译成一个class文件，类或接口的方法信息就放在class文件的method_info结构中 [1] 。如果方法不是抽象的，也不是本地方法，方法的Java代码就会被编译器编译成字节码(即使方法是空的，编译器也会生成一条return语句)，存放在method_info结构的Code属性中。仍以第3章的ClassFileTest类为例，其main()方法如图5-1所示。
 ![5-1](./img/5-1.png)    
 图5-1 用classpy观察方法字节码
 
-字节码中存放编码后的Java虚拟机指令。每条指令都以一个单字节的操作码（opcode）开头，这就是字节码名称的由来。由于只使用一字节表示操作码，显而易见，Java虚拟机最多只能支持256（28 ）条指令。到第八版为止，Java虚拟机规范已经定义了205条指令，操作码分别是0（0x00）到202（0xCA）、254（0xFE）和255（0xFF）。这205条指令构成了Java虚拟机的指令集（instruction set）。和汇编语言类似，为了便于记忆，Java虚拟机规范给每个操作码都指定了一个助记符（mnemonic）。比如操作码是0x00这条指令，因为它什么也不做，所以它的助记符是nop（no operation）。 
+字节码中存放编码后的Java虚拟机指令。每条指令都以一个单字节的操作码(opcode)开头，这就是字节码名称的由来。由于只使用一字节表示操作码，显而易见，Java虚拟机最多只能支持256(28 )条指令。到第八版为止，Java虚拟机规范已经定义了205条指令，操作码分别是0(0x00)到202(0xCA)、254(0xFE)和255(0xFF)。这205条指令构成了Java虚拟机的指令集(instruction set)。和汇编语言类似，为了便于记忆，Java虚拟机规范给每个操作码都指定了一个助记符(mnemonic)。比如操作码是0x00这条指令，因为它什么也不做，所以它的助记符是nop(no operation)。 
 
-Java虚拟机使用的是变长指令，操作码后面可以跟零字节或多字节的操作数（operand）。如果把指令想象成函数的话，操作数就是它的参数。为了让编码后的字节码更加紧凑，很多操作码本身就隐含了操作数，比如把常数0推入操作数栈的指令是iconst_0。下面通过具体的例子来观察Java虚拟机指令。图5-2为ClassFileTest.main（）方法的第一条指令。
+Java虚拟机使用的是变长指令，操作码后面可以跟零字节或多字节的操作数(operand)。如果把指令想象成函数的话，操作数就是它的参数。为了让编码后的字节码更加紧凑，很多操作码本身就隐含了操作数，比如把常数0推入操作数栈的指令是iconst_0。下面通过具体的例子来观察Java虚拟机指令。图5-2为ClassFileTest.main()方法的第一条指令。
 ![5-2](./img/5-2.png)
 图5-2 用classpy观察getstatic指令 
 
@@ -33,9 +33,9 @@ Java虚拟机使用的是变长指令，操作码后面可以跟零字节或多�
 
 表5-1 助记符首字母和变量类型对应表
  
-Java虚拟机规范把已经定义的205条指令按用途分成了11类，分别是：常量（constants）指令、加载（loads）指令、存储（stores）指令、操作数栈（stack）指令、数学（math）指令、转换（conversions）指令、比较（comparisons）指令、控制（control）指令、引用（references）指令、扩展（extended）指令和保留（reserved）指令。 
+Java虚拟机规范把已经定义的205条指令按用途分成了11类，分别是：常量(constants)指令、加载(loads)指令、存储(stores)指令、操作数栈(stack)指令、数学(math)指令、转换(conversions)指令、比较(comparisons)指令、控制(control)指令、引用(references)指令、扩展(extended)指令和保留(reserved)指令。 
 
-保留指令一共有3条。其中一条是留给调试器的，用于实现断点，操作码是202（0xCA），助记符是breakpoint。另外两条留给Java虚拟机实现内部使用，操作码分别是254（0xFE）和266（0xFF），助记符是impdep1和impdep2。这三条指令不允许出现在class文件中。 
+保留指令一共有3条。其中一条是留给调试器的，用于实现断点，操作码是202(0xCA)，助记符是breakpoint。另外两条留给Java虚拟机实现内部使用，操作码分别是254(0xFE)和266(0xFF)，助记符是impdep1和impdep2。这三条指令不允许出现在class文件中。 
 
 本章将要实现的指令涉及11类中的9类。在第9章讨论本地方法调用时会用到保留指令中的impdep1指令，引用指令则分布在第6、第7、第8、第10章等章节中。为了便于管理，我们把每种指令的源文件都放在各自的包里，所有指令都共用的代码则放在base包里。因此ch05\instructions目录下会有如下10个子目录： 
 ```
@@ -91,13 +91,13 @@ type Instruction interface {
     Execute(frame *rtda.Frame) 
 } 
 ```
-FetchOperands（）方法从字节码中提取操作数，Execute（）方法执行指令逻辑。有很多指令的操作数都是类似的。为了避免重复代码，按照操作数类型定义一些结构体，并实现FetchOperands（）方法。这相当于Java中的抽象类，具体的指令继承这些结构体，然后专注实现Execute（）方法即可。
+FetchOperands()方法从字节码中提取操作数，Execute()方法执行指令逻辑。有很多指令的操作数都是类似的。为了避免重复代码，按照操作数类型定义一些结构体，并实现FetchOperands()方法。这相当于Java中的抽象类，具体的指令继承这些结构体，然后专注实现Execute()方法即可。
 
 在instruction.go文件中定义NoOperandsInstruction结构体，代码如下： 
 ```go
 type NoOperandsInstruction struct {} 
 ```
-NoOperandsInstruction表示没有操作数的指令，所以没有定义任何字段。FetchOperands（）方法自然也是空空如也，什么也不用读，代码如下： 
+NoOperandsInstruction表示没有操作数的指令，所以没有定义任何字段。FetchOperands()方法自然也是空空如也，什么也不用读，代码如下： 
 ```go
 func (self *NoOperandsInstruction) FetchOperands(reader *BytecodeReader) { 
     // nothing to do 
@@ -109,7 +109,7 @@ type BranchInstruction struct {
     Offset int 
 } 
 ```
-BranchInstruction表示跳转指令，Offset字段存放跳转偏移量。FetchOperands（）方法从字节码中读取一个uint16整数，转成int后赋给Offset字段。代码如下： 
+BranchInstruction表示跳转指令，Offset字段存放跳转偏移量。FetchOperands()方法从字节码中读取一个uint16整数，转成int后赋给Offset字段。代码如下： 
 ```go
 func (self *BranchInstruction) FetchOperands(reader *BytecodeReader) { 
     self.Offset = int(reader.ReadInt16()) 
@@ -121,7 +121,7 @@ type Index8Instruction struct {
     Index uint 
 } 
 ```
-存储和加载类指令需要根据索引存取局部变量表，索引由单字节操作数给出。把这类指令抽象成Index8Instruction结构体，用Index字段表示局部变量表索引。FetchOperands（）方法从字节码中读取一个int8整数，转成uint后赋给Index字段。代码如下： 
+存储和加载类指令需要根据索引存取局部变量表，索引由单字节操作数给出。把这类指令抽象成Index8Instruction结构体，用Index字段表示局部变量表索引。FetchOperands()方法从字节码中读取一个int8整数，转成uint后赋给Index字段。代码如下： 
 ```go
 func (self *Index8Instruction) FetchOperands(reader *BytecodeReader) { 
     self.Index = uint(reader.ReadUint8()) 
@@ -133,7 +133,7 @@ type Index16Instruction struct {
     Index uint 
 }
 ```
-有一些指令需要访问运行时常量池，常量池索引由两字节操作数给出。把这类指令抽象成Index16Instruction结构体，用Index字段表示常量池索引。FetchOperands（）方法从字节码中读取一个uint16整数，转成uint后赋给Index字段。代码如下：
+有一些指令需要访问运行时常量池，常量池索引由两字节操作数给出。把这类指令抽象成Index16Instruction结构体，用Index字段表示常量池索引。FetchOperands()方法从字节码中读取一个uint16整数，转成uint后赋给Index字段。代码如下：
 ```go
 func (self *Index16Instruction) FetchOperands(reader *BytecodeReader) { 
     self.Index = uint(reader.ReadUint16())
@@ -150,14 +150,14 @@ type BytecodeReader struct {
     pc int 
 } 
 ```
-code字段存放字节码，pc字段记录读取到了哪个字节。为了避免每次解码指令都新创建一个BytecodeReader实例，给它定义一个Reset（）方法，代码如下： 
+code字段存放字节码，pc字段记录读取到了哪个字节。为了避免每次解码指令都新创建一个BytecodeReader实例，给它定义一个Reset()方法，代码如下： 
 ```go
 func (self *BytecodeReader) Reset(code []byte, pc int) { 
     self.code = code 
     self.pc = pc 
 }
  ```
-下面实现一系列的Read（）方法。先看最简单的ReadUint8（）方法，代码如下： 
+下面实现一系列的Read()方法。先看最简单的ReadUint8()方法，代码如下： 
 ```go
 func (self *BytecodeReader) ReadUint8() uint8 { 
     i := self.code[self.pc] 
@@ -165,13 +165,13 @@ func (self *BytecodeReader) ReadUint8() uint8 {
     return i 
 }
 ```
-ReadInt8（）方法调用ReadUint8（），然后把读取到的值转成int8返回，代码如下： 
+ReadInt8()方法调用ReadUint8()，然后把读取到的值转成int8返回，代码如下： 
 ```go
 func (self *BytecodeReader) ReadInt8() int8 { 
     return int8(self.ReadUint8()) 
 }
 ```
-ReadUint16（）连续读取两字节，代码如下：
+ReadUint16()连续读取两字节，代码如下：
 ```go
 func (self *BytecodeReader) ReadUint16() uint16 { 
     byte1 := uint16(self.ReadUint8()) 
@@ -179,13 +179,13 @@ func (self *BytecodeReader) ReadUint16() uint16 {
     return (byte1 << 8) | byte2 
 } 
 ```
-ReadInt16（）方法调用ReadUint16（），然后把读取到的值转成int16返回，代码如下：
+ReadInt16()方法调用ReadUint16()，然后把读取到的值转成int16返回，代码如下：
 ```go
 func (self *BytecodeReader) ReadInt16() int16 { 
     return int16(self.ReadUint16()) 
 }
 ``` 
-ReadInt32（）方法连续读取4字节，代码如下： 
+ReadInt32()方法连续读取4字节，代码如下： 
 ```go
 func (self *BytecodeReader) ReadInt32() int32 { 
     byte1 := int32(self.ReadUint8()) 
@@ -195,9 +195,9 @@ func (self *BytecodeReader) ReadInt32() int32 {
     return (byte1 << 24) | (byte2 << 16) | (byte3 << 8) | byte4
 }
 ```
-还需要定义两个方法：ReadInt32s（）和SkipPadding（）。这两个方法只有tableswitch和lookupswitch指令使用，介绍这两条指令时再给出代码。 
+还需要定义两个方法：ReadInt32s()和SkipPadding()。这两个方法只有tableswitch和lookupswitch指令使用，介绍这两条指令时再给出代码。 
 
-在接下来的9个小节中，将按照分类依次实现约150条指令，占整个指令集的3/4。读者千万不要被150这个数字吓倒，因为很多指令其实是非常相似的。比如iload、lload、fload、dload和aload这5条指令，除了操作的数据类型不同以外，代码几乎一样。再比如iload_0、iload_1、iload_2和iload_3这四条指令，只是iload指令的特例（局部变量表索引隐含在操作码中），操作逻辑完全一样。
+在接下来的9个小节中，将按照分类依次实现约150条指令，占整个指令集的3/4。读者千万不要被150这个数字吓倒，因为很多指令其实是非常相似的。比如iload、lload、fload、dload和aload这5条指令，除了操作的数据类型不同以外，代码几乎一样。再比如iload_0、iload_1、iload_2和iload_3这四条指令，只是iload指令的特例(局部变量表索引隐含在操作码中)，操作逻辑完全一样。
 
 如果逐一列出这150余条指令的代码，既枯燥乏味，也相当浪费纸张。为了节约篇幅，只讨论一些具有代表意义的指令的实现代码，从这些指令可以很容易想象到其他指令的实现。附录A给出了完整的指令集列表，里面有每个指令的操作码、助记符和本书中实现它们的章节，以方便读者参考。
 
@@ -264,7 +264,7 @@ import "jvmgo/ch05/rtda"
 type BIPUSH struct { val int8 } // Push byte 
 type SIPUSH struct { val int16 } // Push short 
 ```
-以bipush指令为例，FetchOperands（）和Execute（）方法的代码如下：
+以bipush指令为例，FetchOperands()和Execute()方法的代码如下：
 ```go
 func (self *BIPUSH) FetchOperands(reader *base.BytecodeReader) { 
     self.val = reader.ReadInt8() 
@@ -296,13 +296,13 @@ func _iload(frame *rtda.Frame, index uint) {
     frame.OperandStack().PushInt(val) 
 } 
 ```
-iload指令的索引来自操作数，其Execute（）方法如下：
+iload指令的索引来自操作数，其Execute()方法如下：
 ```go 
 func (self *ILOAD) Execute(frame *rtda.Frame) { 
     _iload(frame, uint(self.Index)) 
 } 
 ```
-其余4条指令的索引隐含在操作码中，以iload_1为例，其Execute（）方法如下： 
+其余4条指令的索引隐含在操作码中，以iload_1为例，其Execute()方法如下： 
 ```go
 func (self *ILOAD_1) Execute(frame *rtda.Frame) { 
     _iload(frame, 1) 
@@ -328,13 +328,13 @@ func _lstore(frame *rtda.Frame, index uint) {
     frame.LocalVars().SetLong(index, val) 
 }
 ```
-lstore指令的索引来自操作数，其Execute（）方法如下： 
+lstore指令的索引来自操作数，其Execute()方法如下： 
 ```go
 func (self *LSTORE) Execute(frame *rtda.Frame) { 
     _lstore(frame, uint(self.Index)) 
 }
 ```
-其余4条指令的索引隐含在操作码中，以lstore_2为例，其Execute（）方法如下： 
+其余4条指令的索引隐含在操作码中，以lstore_2为例，其Execute()方法如下： 
 ```go
 func (self *LSTORE_2) Execute(frame *rtda.Frame) { 
     _lstore(frame, 2) 
@@ -343,7 +343,7 @@ func (self *LSTORE_2) Execute(frame *rtda.Frame) {
 #### 5.6 栈指令 
 栈指令直接对操作数栈进行操作，共9条：pop和pop2指令将栈顶变量弹出，dup系列指令复制栈顶变量，swap指令交换栈顶的两个变量。 
 
-和其他类型的指令不同，栈指令并不关心变量类型。为了实现栈指令，需要给OperandStack结构体添加两个方法。打开ch05\rtda\operand_stack.go文件，在其中定义PushSlot（）和PopSlot（）方法，代码如下： 
+和其他类型的指令不同，栈指令并不关心变量类型。为了实现栈指令，需要给OperandStack结构体添加两个方法。打开ch05\rtda\operand_stack.go文件，在其中定义PushSlot()和PopSlot()方法，代码如下： 
 ```go
 func (self *OperandStack) PushSlot(slot Slot) { 
     self.slots[self.size] = slot 
@@ -410,7 +410,7 @@ import "jvmgo/ch05/rtda"
 // Swap the top two operand stack values 
 type SWAP struct{ base.NoOperandsInstruction } 
 ```
-swap指令交换栈顶的两个变量，Execute（）方法如下： 
+swap指令交换栈顶的两个变量，Execute()方法如下： 
 ```go
 func (self *SWAP) Execute(frame *rtda.Frame) { 
     stack := frame.OperandStack() 
@@ -423,7 +423,7 @@ func (self *SWAP) Execute(frame *rtda.Frame) {
 #### 5.7 数学指令 
 数学指令大致对应Java语言中的加、减、乘、除等数学运算符。数学指令包括算术指令、位移指令和布尔运算指令等，共37条，将全部在本节实现。
 ##### 5.7.1 算术指令 
-算术指令又可以进一步分为加法（add）指令、减法（sub）指令、乘法（mul）指令、除法（div）指令、求余（rem）指令和取反（neg）指令6种。加、减、乘、除和取反指令都比较简单，本节以稍微复杂一些的求余指令为例进行讨论。 
+算术指令又可以进一步分为加法(add)指令、减法(sub)指令、乘法(mul)指令、除法(div)指令、求余(rem)指令和取反(neg)指令6种。加、减、乘、除和取反指令都比较简单，本节以稍微复杂一些的求余指令为例进行讨论。 
 
 在ch05\instructions\math目录下创建rem.go文件，在其中定义4条求余指令，代码如下： 
 ```go
@@ -436,7 +436,7 @@ type FREM struct{ base.NoOperandsInstruction }
 type IREM struct{ base.NoOperandsInstruction } 
 type LREM struct{ base.NoOperandsInstruction } 
 ```
-irem和lrem代码差不多，以irem为例，其Execute（）方法如下：
+irem和lrem代码差不多，以irem为例，其Execute()方法如下：
 ```go
 func (self *IREM) Execute(frame *rtda.Frame) { 
     stack := frame.OperandStack() 
@@ -449,7 +449,7 @@ func (self *IREM) Execute(frame *rtda.Frame) {
     stack.PushInt(result) 
 }
 ```
-先从操作数栈中弹出两个int变量，求余，然后把结果推入操作数栈。这里注意一点，对int或long变量做除法和求余运算时，是有可能抛出ArithmeticException异常的。frem和drem指令差不多，以drem为例，其Execute（）方法如下： 
+先从操作数栈中弹出两个int变量，求余，然后把结果推入操作数栈。这里注意一点，对int或long变量做除法和求余运算时，是有可能抛出ArithmeticException异常的。frem和drem指令差不多，以drem为例，其Execute()方法如下： 
 ```go
 func (self *DREM) Execute(frame *rtda.Frame) { 
     stack := frame.OperandStack() 
@@ -459,9 +459,9 @@ func (self *DREM) Execute(frame *rtda.Frame) {
     stack.PushDouble(result) 
 } 
 ```
-Go语言没有给浮点数类型定义求余操作符，所以需要使用math包的Mod（）函数。另外，浮点数类型因为有Infinity（无穷大）值，所以即使是除零，也不会导致Arithmetic -Exception异常抛出。
+Go语言没有给浮点数类型定义求余操作符，所以需要使用math包的Mod()函数。另外，浮点数类型因为有Infinity(无穷大)值，所以即使是除零，也不会导致Arithmetic -Exception异常抛出。
 ##### 5.7.2 位移指令 
-位移指令可以分为左移和右移两种，右移指令又可以分为算术右移（有符号右移）和逻辑右移（无符号右移）两种。算术右移和逻辑位移的区别仅在于符号位的扩展，如下面的Java代码所示。
+位移指令可以分为左移和右移两种，右移指令又可以分为算术右移(有符号右移)和逻辑右移(无符号右移)两种。算术右移和逻辑位移的区别仅在于符号位的扩展，如下面的Java代码所示。
 ```go
 int x = -1; 
 println(Integer.toBinaryString(x)); // 11111111111111111111111111111111 
@@ -480,7 +480,7 @@ type LSHL struct{ base.NoOperandsInstruction } // long左位移
 type LSHR struct{ base.NoOperandsInstruction } // long算术右位移 
 type LUSHR struct{ base.NoOperandsInstruction } // long逻辑右位移
 ```
-左移指令比较简单，以ishl指令为例，其Execute（）方法如下： 
+左移指令比较简单，以ishl指令为例，其Execute()方法如下： 
 ```go
 func (self *ISHL) Execute(frame *rtda.Frame) { 
     stack := frame.OperandStack() 
@@ -493,7 +493,7 @@ func (self *ISHL) Execute(frame *rtda.Frame) {
 ``` 
 先从操作数栈中弹出两个int变量v2和v1。v1是要进行位移操作的变量，v2指出要移位多少比特。位移之后，把结果推入操作数栈。这里注意两点：第一，int变量只有32位，所以只取v2的前5个比特就足够表示位移位数了；第二，Go语言位移操作符右侧必须是无符号整数，所以需要对v2进行类型转换。 
 
-算术右移指令需要扩展符号位，代码和左移指令基本上差不多。以lshr指令为例，其Execute（）方法如下： 
+算术右移指令需要扩展符号位，代码和左移指令基本上差不多。以lshr指令为例，其Execute()方法如下： 
 ```go
 func (self *LSHR) Execute(frame *rtda.Frame) { 
     stack := frame.OperandStack() 
@@ -517,7 +517,7 @@ func (self *IUSHR) Execute(frame *rtda.Frame) {
 ``` 
 Go语言并没有Java语言中的>>>运算符，为了达到无符号位移的目的，需要先把v1转成无符号整数，位移操作之后，再转回有符号整数。
 ##### 5.7.3 布尔运算指令 
-布尔运算指令只能操作int和long变量，分为按位与（and）、按位或（or）、按位异或（xor）3种。以按位与为例介绍布尔运算指令。在ch05\instructions\math目录下创建and.go文件，在其中定义iand和land指令，代码如下： 
+布尔运算指令只能操作int和long变量，分为按位与(and)、按位或(or)、按位异或(xor)3种。以按位与为例介绍布尔运算指令。在ch05\instructions\math目录下创建and.go文件，在其中定义iand和land指令，代码如下： 
 ```go
 package math 
 import "jvmgo/ch05/instructions/base" 
@@ -525,7 +525,7 @@ import "jvmgo/ch05/rtda"
 type IAND struct{ base.NoOperandsInstruction } 
 type LAND struct{ base.NoOperandsInstruction } 
 ```
-以iand指令为例，其Execute（）方法如下： 
+以iand指令为例，其Execute()方法如下： 
 ```go
 func (self *IAND) Execute(frame *rtda.Frame) { 
     stack := frame.OperandStack() 
@@ -548,14 +548,14 @@ type IINC struct {
     Const int32 
 } 
 ```
-FetchOperands（）函数从字节码里读取操作数，代码如下：
+FetchOperands()函数从字节码里读取操作数，代码如下：
 ```go
 func (self *IINC) FetchOperands(reader *base.BytecodeReader) { 
     self.Index = uint(reader.ReadUint8()) 
     self.Const = int32(reader.ReadInt8()) 
 }
 ```
-Execute（）方法从局部变量表中读取变量，给它加上常量值，再把结果写回局部变量表，代码如下：
+Execute()方法从局部变量表中读取变量，给它加上常量值，再把结果写回局部变量表，代码如下：
 ```go
 func (self *IINC) Execute(frame *rtda.Frame) { 
     localVars := frame.LocalVars() 
@@ -577,7 +577,7 @@ type D2F struct{ base.NoOperandsInstruction }
 type D2I struct{ base.NoOperandsInstruction } 
 type D2L struct{ base.NoOperandsInstruction } 
 ```
-以d2i指令为例，它的Execute（）方法如下：
+以d2i指令为例，它的Execute()方法如下：
 ```go
 func (self *D2I) Execute(frame *rtda.Frame) { 
     stack := frame.OperandStack() 
@@ -598,7 +598,7 @@ import "jvmgo/ch05/rtda"
 // Compare long 
 type LCMP struct{ base.NoOperandsInstruction } 
 ```
-Execute（）方法把栈顶的两个long变量弹出，进行比较，然后把比较结果（int型0、1或-1）推入栈顶，代码如下：
+Execute()方法把栈顶的两个long变量弹出，进行比较，然后把比较结果(int型0、1或-1)推入栈顶，代码如下：
 ```go
 func (self *LCMP) Execute(frame *rtda.Frame) { 
     stack := frame.OperandStack() 
@@ -623,7 +623,7 @@ import "jvmgo/ch05/rtda"
 type FCMPG struct{ base.NoOperandsInstruction } 
 type FCMPL struct{ base.NoOperandsInstruction }
 ```
-这两条指令和lcmp指令很像，但是除了比较的变量类型不同以外，还有一个重要的区别。由于浮点数计算有可能产生NaN（Not a Number）值，所以比较两个浮点数时，除了大于、等于、小于之外，还有第4种结果：无法比较。fcmpg和fcmpl指令的区别就在于对第4种结果的定义。编写一个函数来统一比较float变量，代码如下： 
+这两条指令和lcmp指令很像，但是除了比较的变量类型不同以外，还有一个重要的区别。由于浮点数计算有可能产生NaN(Not a Number)值，所以比较两个浮点数时，除了大于、等于、小于之外，还有第4种结果：无法比较。fcmpg和fcmpl指令的区别就在于对第4种结果的定义。编写一个函数来统一比较float变量，代码如下： 
 ```go
 func _fcmp(frame *rtda.Frame, gFlag bool) { 
     stack := frame.OperandStack() 
@@ -642,7 +642,7 @@ func _fcmp(frame *rtda.Frame, gFlag bool) {
     } 
 }
 ```
-fcmpg和fcmpl指令的Execute（）方法只是简单地调用_fcmp（）函数而已，代码如下： 
+fcmpg和fcmpl指令的Execute()方法只是简单地调用_fcmp()函数而已，代码如下： 
 ```go
 func (self *FCMPG) Execute(frame *rtda.Frame) { 
     _fcmp(frame, true) 
@@ -674,7 +674,7 @@ type IFGE struct{ base.BranchInstruction }
 ·ifle：x<=0·ifgt：x>0 
 ·ifge：x>=0 
 ```
-以ifeq指令为例，其Execute（）方法如下：
+以ifeq指令为例，其Execute()方法如下：
 ```go
 func (self *IFEQ) Execute(frame *rtda.Frame) { 
     val := frame.OperandStack().PopInt() 
@@ -683,7 +683,7 @@ func (self *IFEQ) Execute(frame *rtda.Frame) {
     } 
 }
 ```
-真正的跳转逻辑在Branch（）函数中。因为这个函数在很多指令中都会用到，所以把它定义在ch05\instructions\base\branch_logic.go 文件中，代码如下： 
+真正的跳转逻辑在Branch()函数中。因为这个函数在很多指令中都会用到，所以把它定义在ch05\instructions\base\branch_logic.go 文件中，代码如下： 
 ```go
 package base 
 import "jvmgo/ch05/rtda" 
@@ -693,7 +693,7 @@ func Branch(frame *rtda.Frame, offset int) {
     frame.SetNextPC(nextPC) 
 }
 ```
-Frame结构体的SetNextPC（）方法将在5.12小节介绍。
+Frame结构体的SetNextPC()方法将在5.12小节介绍。
 ##### 5.9.4 `if_icmp<cond>`指令 
 在ch05\instructions\comparisons目录下创建if_icmp.go文件，在其中定义6条if_icmp指令，代码如下：
 ```go
@@ -708,7 +708,7 @@ type IF_ICMPLE struct{ base.BranchInstruction }
 type IF_ICMPGT struct{ base.BranchInstruction } 
 type IF_ICMPGE struct{ base.BranchInstruction } 
 ```
-`if_icmp<cond>`指令把栈顶的两个int变量弹出，然后进行比较，满足条件则跳转。跳转条件和`if<cond>`指令类似。以if_icmpne指令为例，其Execute（）方法如下：
+`if_icmp<cond>`指令把栈顶的两个int变量弹出，然后进行比较，满足条件则跳转。跳转条件和`if<cond>`指令类似。以if_icmpne指令为例，其Execute()方法如下：
 ```go 
 func (self *IF_ICMPNE) Execute(frame *rtda.Frame) { 
     stack := frame.OperandStack() 
@@ -729,7 +729,7 @@ import "jvmgo/ch05/rtda"
 type IF_ACMPEQ struct{ base.BranchInstruction } 
 type IF_ACMPNE struct{ base.BranchInstruction }
 ```
-_acmpeq和if_acmpne指令把栈顶的两个引用弹出，根据引用是否相同进行跳转。以if_acmpeq指令为例，其Execute（）方法如下：
+_acmpeq和if_acmpne指令把栈顶的两个引用弹出，根据引用是否相同进行跳转。以if_acmpeq指令为例，其Execute()方法如下：
 ```go
 func (self *IF_ACMPEQ) Execute(frame *rtda.Frame) { 
     stack := frame.OperandStack() 
@@ -751,7 +751,7 @@ import "jvmgo/ch05/rtda"
 // Branch always 
 type GOTO struct{ base.BranchInstruction } 
 ```
-goto指令进行无条件跳转，其Execute（）方法如下： 
+goto指令进行无条件跳转，其Execute()方法如下： 
 ```go
 func (self *GOTO) Execute(frame *rtda.Frame) { 
     base.Branch(frame, self.Offset) 
@@ -794,7 +794,7 @@ type TABLE_SWITCH struct {
 }
 ```
 
-tableswitch指令的操作数比较复杂，它的FetchOperands（）方法如下： 
+tableswitch指令的操作数比较复杂，它的FetchOperands()方法如下： 
 ```go
 func (self *TABLE_SWITCH) FetchOperands(reader *base.BytecodeReader) { 
     reader.SkipPadding() 
@@ -805,7 +805,7 @@ func (self *TABLE_SWITCH) FetchOperands(reader *base.BytecodeReader) {
     self.jumpOffsets = reader.ReadInt32s(jumpOffsetsCount) 
 } 
 ```
-tableswitch指令操作码的后面有0~3字节的padding，以保证defaultOffset在字节码中的地址是4的倍数。BytecodeReader结构体的SkipPadding（）方法如下： 
+tableswitch指令操作码的后面有0~3字节的padding，以保证defaultOffset在字节码中的地址是4的倍数。BytecodeReader结构体的SkipPadding()方法如下： 
 ```go
 func (self *BytecodeReader) SkipPadding() { 
     for self.pc%4 != 0 { 
@@ -813,7 +813,7 @@ func (self *BytecodeReader) SkipPadding() {
     } 
 }
 ```
-defaultOffset对应默认情况下执行跳转所需的字节码偏移量；low和high记录case的取值范围；jumpOffsets是一个索引表，里面存放high-low+1个int值，对应各种case情况下，执行跳转所需的字节码偏移量。BytecodeReader结构体的ReadInt32s（）方法如下：
+defaultOffset对应默认情况下执行跳转所需的字节码偏移量；low和high记录case的取值范围；jumpOffsets是一个索引表，里面存放high-low+1个int值，对应各种case情况下，执行跳转所需的字节码偏移量。BytecodeReader结构体的ReadInt32s()方法如下：
 ```go
 func (self *BytecodeReader) ReadInt32s(n int32) []int32 { 
     ints := make([]int32, n) 
@@ -823,7 +823,7 @@ func (self *BytecodeReader) ReadInt32s(n int32) []int32 {
     return ints 
 }
 ```
-Execute（）方法先从操作数栈中弹出一个int变量，然后看它是否在low和high给定的范围之内。如果在，则从jumpOffsets表中查出偏移量进行跳转，否则按照defaultOffset跳转。代码如下：
+Execute()方法先从操作数栈中弹出一个int变量，然后看它是否在low和high给定的范围之内。如果在，则从jumpOffsets表中查出偏移量进行跳转，否则按照defaultOffset跳转。代码如下：
 ```go
 func (self *TABLE_SWITCH) Execute(frame *rtda.Frame) { 
     index := frame.OperandStack().PopInt() 
@@ -848,7 +848,7 @@ type LOOKUP_SWITCH struct {
     matchOffsets []int32 
 }
 ```
-FetchOperands（）方法也要先跳过padding，代码如下： 
+FetchOperands()方法也要先跳过padding，代码如下： 
 ```go
 func (self *LOOKUP_SWITCH) FetchOperands(reader *base.BytecodeReader) { 
     reader.SkipPadding() 
@@ -857,7 +857,7 @@ func (self *LOOKUP_SWITCH) FetchOperands(reader *base.BytecodeReader) {
     self.matchOffsets = reader.ReadInt32s(self.npairs * 2) 
 }
 ```
-matchOffsets有点像Map，它的key是case值，value是跳转偏移量。Execute（）方法先从操作数栈中弹出一个int变量，然后用它查找matchOffsets，看是否能找到匹配的key。如果能，则按照value给出的偏移量跳转，否则按照defaultOffset跳转。代码如下：
+matchOffsets有点像Map，它的key是case值，value是跳转偏移量。Execute()方法先从操作数栈中弹出一个int变量，然后用它查找matchOffsets，看是否能找到匹配的key。如果能，则按照value给出的偏移量跳转，否则按照defaultOffset跳转。代码如下：
 ```go
 func (self *LOOKUP_SWITCH) Execute(frame *rtda.Frame) { 
     key := frame.OperandStack().PopInt()
@@ -889,7 +889,7 @@ type WIDE struct {
     modifiedInstruction base.Instruction 
 }
 ```
-wide指令改变其他指令的行为，modifiedInstruction字段存放被改变的指令。wide指令需要自己解码出modifiedInstruction，FetchOperands（）方法的代码如下： 
+wide指令改变其他指令的行为，modifiedInstruction字段存放被改变的指令。wide指令需要自己解码出modifiedInstruction，FetchOperands()方法的代码如下： 
 ```go
 func (self *WIDE) FetchOperands(reader *base.BytecodeReader) {
     opcode := reader.ReadUint8() 
@@ -910,7 +910,7 @@ func (self *WIDE) FetchOperands(reader *base.BytecodeReader) {
     } 
 }
 ```
-FetchOperands（）方法先从字节码中读取一字节的操作码，然后创建子指令实例，最后读取子指令的操作数。因为没有实现ret指令，所以暂时调用panic（）函数终止程序执行。加载指令和存储指令都只有一个操作数，需要扩展成2字节，以iload为例： 
+FetchOperands()方法先从字节码中读取一字节的操作码，然后创建子指令实例，最后读取子指令的操作数。因为没有实现ret指令，所以暂时调用panic()函数终止程序执行。加载指令和存储指令都只有一个操作数，需要扩展成2字节，以iload为例： 
 ```go
 case 0x15: 
     inst := &loads.ILOAD{} 
@@ -925,7 +925,7 @@ case 0x84:
     inst.Const = int32(reader.ReadInt16()) 
     self.modifiedInstruction = inst
 ```
-wide指令只是增加了索引宽度，并不改变子指令操作，所以其Execute（）方法只要调用子指令的Execute（）方法即可，代码如下：
+wide指令只是增加了索引宽度，并不改变子指令操作，所以其Execute()方法只要调用子指令的Execute()方法即可，代码如下：
 ```go
 func (self *WIDE) Execute(frame *rtda.Frame) { 
     self.modifiedInstruction.Execute(frame) 
@@ -940,7 +940,7 @@ import "jvmgo/ch05/rtda"
 type IFNULL struct{ base.BranchInstruction } // Branch if reference is null 
 type IFNONNULL struct{ base.BranchInstruction } // Branch if reference not null 
 ```
-根据引用是否是null进行跳转，ifnull和ifnonnull指令把栈顶的引用弹出。以ifnull指令为例，它的Execute（）方法如下： 
+根据引用是否是null进行跳转，ifnull和ifnonnull指令把栈顶的引用弹出。以ifnull指令为例，它的Execute()方法如下： 
 ```go
 func (self *IFNULL) Execute(frame *rtda.Frame) { 
     ref := frame.OperandStack().PopRef() 
@@ -966,14 +966,14 @@ func (self *GOTO_W) FetchOperands(reader *base.BytecodeReader) {
     self.offset = int(reader.ReadInt32()) 
 } 
 ```
-Execute（）方法的代码如下： 
+Execute()方法的代码如下： 
 ```go
 func (self *GOTO_W) Execute(frame *rtda.Frame) { 
     base.Branch(frame, self.offset) 
 }
 ```
 #### 5.12 解释器 
-指令集已经实现得差不多了，本节编写一个简单的解释器。这个解释器目前只能执行一个Java方法，但是在后面的章节中，会不断完善它，让它变得越来越强大。在ch05目录下创建interpreter.go文件，在其中定义interpret（）函数，代码如下：
+指令集已经实现得差不多了，本节编写一个简单的解释器。这个解释器目前只能执行一个Java方法，但是在后面的章节中，会不断完善它，让它变得越来越强大。在ch05目录下创建interpreter.go文件，在其中定义interpret()函数，代码如下：
 ```go 
 package main 
 import "fmt" 
@@ -983,14 +983,14 @@ import "jvmgo/ch05/instructions/base"
 import "jvmgo/ch05/rtda" 
 func interpret(methodInfo *classfile.MemberInfo) {...} 
 ```
-Interpret()方法的参数是MemberInfo指针，调用MemberInfo结构体的CodeAttribute（）方法可以获取它的Code属性，语法结构如下：
+Interpret()方法的参数是MemberInfo指针，调用MemberInfo结构体的CodeAttribute()方法可以获取它的Code属性，语法结构如下：
 ```go
 func interpret(methodInfo *classfile.MemberInfo) { 
     codeAttr := methodInfo.CodeAttribute() 
     ... // 其他代码 
 } 
 ```
-CodeAttribute（）方法是新增加的，代码在ch05\classfile\member_info.go文件中，代码如下： 
+CodeAttribute()方法是新增加的，代码在ch05\classfile\member_info.go文件中，代码如下： 
 ```go
 func (self *MemberInfo) CodeAttribute() *CodeAttribute { 
     for _, attrInfo := range self.attributes { 
@@ -1012,7 +1012,7 @@ func interpret(methodInfo *classfile.MemberInfo) {
     ... // 其他代码 
 } 
 ```
-interpret（）方法的其余代码先创建一个Thread实例，然后创建一个帧并把它推入Java虚拟机栈顶，最后执行方法。完整的代码如下：
+interpret()方法的其余代码先创建一个Thread实例，然后创建一个帧并把它推入Java虚拟机栈顶，最后执行方法。完整的代码如下：
 ```go
 func interpret(methodInfo *classfile.MemberInfo) { 
     codeAttr := methodInfo.CodeAttribute() 
@@ -1025,13 +1025,13 @@ func interpret(methodInfo *classfile.MemberInfo) {
     loop(thread, bytecode) 
 } 
 ```
-Thread结构体的NewFrame（）方法是新增加的，代码在ch05\rtda\thread.go文件中，如下所示： 
+Thread结构体的NewFrame()方法是新增加的，代码在ch05\rtda\thread.go文件中，如下所示： 
 ```go
 func (self *Thread) NewFrame(maxLocals, maxStack uint) *Frame { 
     return newFrame(self, maxLocals, maxStack) 
 } 
 ```
-Frame结构体也有变化，增加了两个字段，改动如下（在ch05\rtda\frame.go文件中）： 
+Frame结构体也有变化，增加了两个字段，改动如下(在ch05\rtda\frame.go文件中)： 
 ```go
 type Frame struct { 
     lower *Frame 
@@ -1041,7 +1041,7 @@ type Frame struct {
     nextPC int 
 }
 ```
-这两个字段主要是为了实现跳转指令而添加的，回顾一下Branch（）方法，代码如下： 
+这两个字段主要是为了实现跳转指令而添加的，回顾一下Branch()方法，代码如下： 
 ```go
 func Branch(frame *rtda.Frame, offset int) { 
     pc := frame.Thread().PC() 
@@ -1050,7 +1050,7 @@ func Branch(frame *rtda.Frame, offset int) {
 }
 ```
 
-Frame结构体的newFrame（）方法也相应发生了变化，改动如下：
+Frame结构体的newFrame()方法也相应发生了变化，改动如下：
 ```go
 func newFrame(thread *Thread, maxLocals, maxStack uint) *Frame { 
     return &Frame{
@@ -1061,7 +1061,7 @@ func newFrame(thread *Thread, maxLocals, maxStack uint) *Frame {
 } 
 ```
 
-回到interpret（）方法，我们的解释器目前还没有办法优雅地结束运行。因为每个方法的最后一条指令都是某个return指令，而还没有实现return指令，所以方法在执行过程中必定会出现错误，此时解释器逻辑会转到catchErr（）函数，代码如下： 
+回到interpret()方法，我们的解释器目前还没有办法优雅地结束运行。因为每个方法的最后一条指令都是某个return指令，而还没有实现return指令，所以方法在执行过程中必定会出现错误，此时解释器逻辑会转到catchErr()函数，代码如下： 
 ```go
 func catchErr(frame *rtda.Frame) { 
     if r := recover(); r != nil { 
@@ -1071,7 +1071,7 @@ func catchErr(frame *rtda.Frame) {
     } 
 }
 ```
-把局部变量表和操作数栈的内容打印出来,以此来观察方法的执行结果。还剩一个loop（）函数，其代码如下：
+把局部变量表和操作数栈的内容打印出来,以此来观察方法的执行结果。还剩一个loop()函数，其代码如下：
 ```go
 func loop(thread *rtda.Thread, bytecode []byte) { 
     frame := thread.PopFrame() 
@@ -1091,7 +1091,7 @@ func loop(thread *rtda.Thread, bytecode []byte) {
     } 
 }
 ```
-loop（）函数循环执行“计算pc、解码指令、执行指令”这三个步骤，直到遇到错误！代码中有一个函数还没有给出代码：NewInstruction（）。这个函数是switch-case语句，根据操作码创建具体的指令，代码在ch05\instructions\factory.go文件中，如下所示： 
+loop()函数循环执行“计算pc、解码指令、执行指令”这三个步骤，直到遇到错误！代码中有一个函数还没有给出代码：NewInstruction()。这个函数是switch-case语句，根据操作码创建具体的指令，代码在ch05\instructions\factory.go文件中，如下所示： 
 ```go
 package instructions 
 import "fmt" 
@@ -1124,7 +1124,7 @@ var (
 )
 ```
  
-对于这类指令，在NewInstruction（）函数中直接返回单例变量即可，代码如下： 
+对于这类指令，在NewInstruction()函数中直接返回单例变量即可，代码如下： 
 ```go
 func NewInstruction(opcode byte) base.Instruction { 
     switch opcode { 
@@ -1160,7 +1160,7 @@ import "strings"import "jvmgo/ch05/classfile"
 import "jvmgo/ch05/classpath" 
 ```
 
-main（）函数不变，修改startJVM（）函数，改动如下： 
+main()函数不变，修改startJVM()函数，改动如下： 
 ```go
 func startJVM(cmd *Cmd) { 
     cp := classpath.Parse(cmd.XjreOption, cmd.cpOption) 
@@ -1174,7 +1174,7 @@ func startJVM(cmd *Cmd) {
     } 
 }
 ```
-startJVM()首先调用loadClass()方法读取并解析class文件，然后调用getMainMethod（）函数查找类的main（）方法，最后调用interpret（）函数解释执行main（）方法。loadClass（）函数的代码如下：
+startJVM()首先调用loadClass()方法读取并解析class文件，然后调用getMainMethod()函数查找类的main()方法，最后调用interpret()函数解释执行main()方法。loadClass()函数的代码如下：
 ```go
 func loadClass(className string, cp *classpath.Classpath) *classfile.ClassFile { 
     classData, _, err := cp.ReadClass(className) 
@@ -1188,7 +1188,7 @@ func loadClass(className string, cp *classpath.Classpath) *classfile.ClassFile {
     return cf 
 } 
 ```
-getMainMethod（）函数的代码如下：
+getMainMethod()函数的代码如下：
 ```go
 func getMainMethod(cf *classfile.ClassFile) *classfile.MemberInfo { 
     for _, m := range cf.Methods() { 
@@ -1205,11 +1205,11 @@ go install jvmgo\ch05
 ```
 编译成功后，在D：\go\workspace\bin目录下会出现ch05.exe文件。用javac编译GaussTest类，然后用ch05.exe执行GaussTest程序，结果如图5-3所示。注意一定要保证可以在当前目录下找到GaussTest.class文件，否则应该用-cp选项指定用户类路径。 
 ![5-3](./img/5-3.png) 
-图5-3 GaussTest程序执行结果（1） 
+图5-3 GaussTest程序执行结果(1) 
 
 方法执行，并打印出了执行过的指令。在我们预料之中，方法执行的最后出现了错误，局部变量表和操作数栈的状态也打印了出来，如图5-4所示。仔细观察局部变量表可以看到5050这个数字，这正是我们的计算结果！
 ![5-4](./img/5-4.png)  
-图5-4 GaussTest程序执行结果（2）
+图5-4 GaussTest程序执行结果(2)
 #### 5.14 本章小结 
 虽然还有很多缺陷，但是我们的Java虚拟机已经可以解释执行字节码了，这是一个很大的进步！下一章将讨论类和对象在内存中的布局，并且开始实现引用类指令。还等什么？快来阅读吧！
 

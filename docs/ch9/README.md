@@ -3,9 +3,9 @@
 
 在前面的8章里，我们一直在实现Java虚拟机的基本功能。我们已经知道，要想运行Java程序，除了Java虚拟机之外，还需要Java类库的配合。Java虚拟机和Java类库一起构成了Java运行时环境。Java类库主要用Java语言编写，一些无法用Java语言实现的方法则使用本地语言编写，这些方法叫作本地方法。从本章开始，将陆续实现一些Java类库中的本地方法。 
 
-OpenJDK类库中的本地方法是用JNI（Java Native Interface） [1]编写的，但是要让虚拟机支持JNI规范还需要做大量的工作。由于本书的主要目的是介绍Java虚拟机的工作原理，为了不陷入JNI规范的细节之中，将使用Go语言来实现这些方法。 
+OpenJDK类库中的本地方法是用JNI(Java Native Interface) [1]编写的，但是要让虚拟机支持JNI规范还需要做大量的工作。由于本书的主要目的是介绍Java虚拟机的工作原理，为了不陷入JNI规范的细节之中，将使用Go语言来实现这些方法。 
 
-开始编写代码之前，还是先把目录结构准备好。复制ch08目录，改名为ch09。修改main.go等文件，把import语句中的ch08全都替换成ch09。在ch09目录下创建native子目录，本章新增的go文件主要都在这个目录（和它的子目录）中。现在，目录结构看起来是下面这个样子：
+开始编写代码之前，还是先把目录结构准备好。复制ch08目录，改名为ch09。修改main.go等文件，把import语句中的ch08全都替换成ch09。在ch09目录下创建native子目录，本章新增的go文件主要都在这个目录(和它的子目录)中。现在，目录结构看起来是下面这个样子：
 
 ```shell script
 D:\go\workspace\src 
@@ -31,14 +31,14 @@ import "jvmgo/ch09/rtda"
 type NativeMethod func(frame *rtda.Frame) 
 var registry = map[string]NativeMethod{} 
 ```
-把本地方法定义成一个函数，参数是Frame结构体指针，没有返回值。这个frame参数就是本地方法的工作空间，也就是连接Java虚拟机和Java类库的桥梁，后面会看到它是如何发挥作用的。registry变量是个哈希表，值是具体的本地方法实现。那么键是什么呢？继续编辑registry.go文件，在其中实现Register（）函数，代码如下：
+把本地方法定义成一个函数，参数是Frame结构体指针，没有返回值。这个frame参数就是本地方法的工作空间，也就是连接Java虚拟机和Java类库的桥梁，后面会看到它是如何发挥作用的。registry变量是个哈希表，值是具体的本地方法实现。那么键是什么呢？继续编辑registry.go文件，在其中实现Register()函数，代码如下：
 ```go
 func Register(className, methodName, methodDescriptor string, method NativeMethod) { 
     key := className + "~" + methodName + "~" + methodDescriptor 
     registry[key] = method 
 }
 ```
-类名、方法名和方法描述符加在一起才能唯一确定一个方法，所以把它们的组合作为本地方法注册表的键，Register（）函数把前述三种信息和本地方法实现关联起来。继续编辑registry.go文件，在其中实现FindNativeMethod（）方法，代码如下：
+类名、方法名和方法描述符加在一起才能唯一确定一个方法，所以把它们的组合作为本地方法注册表的键，Register()函数把前述三种信息和本地方法实现关联起来。继续编辑registry.go文件，在其中实现FindNativeMethod()方法，代码如下：
 ```go
 func FindNativeMethod(className, methodName, methodDescriptor string) NativeMethod { 
 key := className + "~" + methodName + "~" + methodDescriptor 
@@ -51,7 +51,7 @@ return emptyNativeMethod
 return nil 
 }
 ```
-FindNativeMethod（）方法根据类名、方法名和方法描述符查找本地方法实现，如果找不到，则返回nil。第7章结尾提到过，jva.lang.Object等类是通过一个叫作registerNatives（）的本地方法来注册其他本地方法的。在本章和后面的章节中，将自己注册所有的本地方法实现。所以像registerNatives（）这样的方法就没有太大的用处。为了避免重复代码，这里统一处理，如果遇到这样的本地方法，就返回一个空的实现，代码如下：
+FindNativeMethod()方法根据类名、方法名和方法描述符查找本地方法实现，如果找不到，则返回nil。第7章结尾提到过，jva.lang.Object等类是通过一个叫作registerNatives()的本地方法来注册其他本地方法的。在本章和后面的章节中，将自己注册所有的本地方法实现。所以像registerNatives()这样的方法就没有太大的用处。为了避免重复代码，这里统一处理，如果遇到这样的本地方法，就返回一个空的实现，代码如下：
 ```go
 func emptyNativeMethod(frame *rtda.Frame) { 
 // do nothing 
@@ -59,9 +59,9 @@ func emptyNativeMethod(frame *rtda.Frame) {
 ```
 本地方法注册表准备好了，下面介绍如何调用本地方法。
 #### 9.2 调用本地方法 
-第7章用一段hack代码来跳过本地方法的执行。现在，终于可以把这段代码删除了！编辑ch09\instructions\base\method_invoke_logic.go，把fmt包的导入语句和Invoke -Method（）函数中的hack代码删除。为了节约篇幅，这里就不给出代码了。 
-Java虚拟机规范并没有规定如何实现和调用本地方法，这给了我们充分的空间来发挥自己的想象力。读者很快就会看到，我们将利用Java虚拟机栈执行本地方法，所以除了删除上面的InvokeMethod（）函数中的hack代码之外，不用做任何修改。
-但是，本地方法并没有字节码，如何利用Java虚拟机栈来执行呢？Java虚拟机规范预留了两条指令，操作码分别是0xFE和0xFF。下面将使用0xFE指令来达到这个目的。打开ch09\rtda\heap\method.go文件，修改newMethods（）函数，改动如下：
+第7章用一段hack代码来跳过本地方法的执行。现在，终于可以把这段代码删除了！编辑ch09\instructions\base\method_invoke_logic.go，把fmt包的导入语句和Invoke -Method()函数中的hack代码删除。为了节约篇幅，这里就不给出代码了。 
+Java虚拟机规范并没有规定如何实现和调用本地方法，这给了我们充分的空间来发挥自己的想象力。读者很快就会看到，我们将利用Java虚拟机栈执行本地方法，所以除了删除上面的InvokeMethod()函数中的hack代码之外，不用做任何修改。
+但是，本地方法并没有字节码，如何利用Java虚拟机栈来执行呢？Java虚拟机规范预留了两条指令，操作码分别是0xFE和0xFF。下面将使用0xFE指令来达到这个目的。打开ch09\rtda\heap\method.go文件，修改newMethods()函数，改动如下：
 ```go
 func newMethods(class *Class, cfMethods []*classfile.MemberInfo) []*Method { 
 methods := make([]*Method, len(cfMethods)) 
@@ -71,7 +71,7 @@ methods[i] = newMethod(class, cfMethod)
 return methods 
 }
 ```
-为了避免newMethods（）函数变得太长，我们抽取出一个newMethod（）函数，代码如下：
+为了避免newMethods()函数变得太长，我们抽取出一个newMethod()函数，代码如下：
 ```go
 func newMethod(class *Class, cfMethod *classfile.MemberInfo) *Method { 
 method := &Method{} 
@@ -88,7 +88,7 @@ return method
 ```
 粗体部分需要解释一下：先计算argSlotCount字段，如果是本地 
 方法，则注入字节码和其他信息。继续编辑method.go文件，添加 
-injectCodeAttribute（）方法，代码如下：
+injectCodeAttribute()方法，代码如下：
 ```go
 func (self *Method) injectCodeAttribute(returnType string) { 
 self.maxStack = 4 
@@ -104,14 +104,14 @@ default: self.code = []byte{0xfe, 0xac} // ireturn
 }
 ```
 本地方法在class文件中没有Code属性，所以需要给maxStack和maxLocals字段赋值。本地方法帧的操作数栈至少要能容纳返回值，为了简化代码，暂时给maxStack字段赋值为4。因为本地方法帧的局部变量表只用来存放参数值，所以把argSlotCount赋给maxLocals字段刚好。至于code字段，也就是本地方法的字节码，第一条指令都是0xFE，第二条指令则根据函数的返回值选择相应的返回指令。
-另外，由于把方法描述符的解析挪到了newMethod（）函数中，所以calcArgSlotCount()方法也稍微有些变化（增加了一个参数），变动如下： 
+另外，由于把方法描述符的解析挪到了newMethod()函数中，所以calcArgSlotCount()方法也稍微有些变化(增加了一个参数)，变动如下： 
 ```go
 func (self *Method) calcArgSlotCount(paramTypes []string) { 
 for _, paramType := range paramTypes { 
 ... // 其他代码不变 
 }
 ```
-下面我们来实现0xFE指令。在ch09\instructions目录下创建reserved子目录，然后在该目录下创建invokenative.go文件，在其中定义0xFE（后面称之为invokenative）指令，代码如下：
+下面我们来实现0xFE指令。在ch09\instructions目录下创建reserved子目录，然后在该目录下创建invokenative.go文件，在其中定义0xFE(后面称之为invokenative)指令，代码如下：
 ```go
 package reserved 
 import "jvmgo/ch09/instructions/base" 
@@ -119,7 +119,7 @@ import "jvmgo/ch09/rtda"
 import "jvmgo/ch09/native"
 type INVOKE_NATIVE struct{ base.NoOperandsInstruction } 
 ```
-这个指令不需要操作数，Execute（）方法的代码如下：
+这个指令不需要操作数，Execute()方法的代码如下：
 ```go
 func (self *INVOKE_NATIVE) Execute(frame *rtda.Frame) { 
 method := frame.Method() 
@@ -140,7 +140,7 @@ nativeMethod(frame)
 Java的反射机制十分强大，本节讨论的内容只是冰山一角。
 ##### 9.3.1 类和对象之间的关系 
 在Java中，类也表现为普通的对象，它的类是java.lang.Class。听起来有点像鸡生蛋还是蛋生鸡的问题：类也是对象，而对象又是类的实例。那么在Java虚拟机内部，究竟是先有类还是先有对象呢？下面就来一探究竟。 
-如前所述，Java有强大的反射能力。可以在运行期间获取类的各种信息、存取静态和实例变量、调用方法，等等。要想运用这种能力，获取类对象 [1] 是第一步。在Java语言中，有两种方式可以获得类对象引用：使用类字面值和调用对象的getClass（）方法。下面的Java代码演示了这两种方式。 
+如前所述，Java有强大的反射能力。可以在运行期间获取类的各种信息、存取静态和实例变量、调用方法，等等。要想运用这种能力，获取类对象 [1] 是第一步。在Java语言中，有两种方式可以获得类对象引用：使用类字面值和调用对象的getClass()方法。下面的Java代码演示了这两种方式。 
 ```java
 System.out.println(String.class); 
 System.out.println("abc".getClass()); 
@@ -169,7 +169,7 @@ extra字段用来记录Object结构体实例的额外信息。同样给它定义
 图9-1只画出了Class和Object结构体的必要字段，并且刻意分开了堆和方法区。在方法区中，class1和class2分别是java.lang.Object和java.lang.Class类的数据。在堆中，object1和object2分别是java.lang.Object和java.lang.Class的类对象。object3是单独的java.lang.Object实例。虽然已经简化到了极点，但仍然有8条箭头，希望有密集恐惧症的读者不要被吓倒。 
 [1] 在本书中，类对象特指java.lang.Class类的实例；对象泛指任何类的实例。
 ##### 9.3.2 修改类加载器 
-Class和Object结构体准备好了，接下来修改类加载器，让每一个加载到方法区中的类都有一个类对象与之相关联。打开ch09\rtda\heap\class_loader.go文件，修改NewClassLoader（）函数，改动如下： 
+Class和Object结构体准备好了，接下来修改类加载器，让每一个加载到方法区中的类都有一个类对象与之相关联。打开ch09\rtda\heap\class_loader.go文件，修改NewClassLoader()函数，改动如下： 
 ```go
 func NewClassLoader(cp *classpath.Classpath, verboseFlag bool) *ClassLoader { 
 loader := &ClassLoader{ 
@@ -181,7 +181,7 @@ loader.loadBasicClasses()
 return loader 
 }
 ```
-在返回ClassLoader结构体实例之前，先调用loadBasicClasses（）函数。这个函数也要添加到class_loader.go文件中，代码如下：
+在返回ClassLoader结构体实例之前，先调用loadBasicClasses()函数。这个函数也要添加到class_loader.go文件中，代码如下：
 ```go
 func (self *ClassLoader) loadBasicClasses() { 
 jlClassClass := self.LoadClass("java/lang/Class") 
@@ -193,7 +193,7 @@ class.jClass.extra = class
 } 
 }
 ```
-loadBasicClasses（）函数先加载java.lang.Class类，这又会触发java.lang.Object等类和接口的加载。然后遍历classMap，给已经加载的每一个类关联类对象。好啦，问题已经解决了一半。下面修改LoadClass（）方法，解决另一半问题。改动较大，代码如下：
+loadBasicClasses()函数先加载java.lang.Class类，这又会触发java.lang.Object等类和接口的加载。然后遍历classMap，给已经加载的每一个类关联类对象。好啦，问题已经解决了一半。下面修改LoadClass()方法，解决另一半问题。改动较大，代码如下：
 ```go
 func (self *ClassLoader) LoadClass(name string) *Class { 
 if class, ok := self.classMap[name]; ok { 
@@ -212,7 +212,7 @@ class.jClass.extra = class
 return class 
 }
 ```
-主要的变动是粗体部分。在类加载完之后，看java.lang.Class是否已经加载。如果是，则给类关联类对象。这样，在loadBasicClasses（）和LoadClass（）方法的配合之下，所有加载到方法区的类都设置好了jClass字段。
+主要的变动是粗体部分。在类加载完之后，看java.lang.Class是否已经加载。如果是，则给类关联类对象。这样，在loadBasicClasses()和LoadClass()方法的配合之下，所有加载到方法区的类都设置好了jClass字段。
 ##### 9.3.3 基本类型的类 
 void和基本类型也有对应的类对象，但只能通过字面值来访问，如下面的Java代码所示。 
 ```java
@@ -226,7 +226,7 @@ System.out.println(long.class);
 System.out.println(float.class); 
 System.out.println(double.class); 
 ```
-和数组类一样，基本类型的类也是由Java虚拟机在运行期间生成的。继续编辑class_loader.go文件，修改NewClassLoader（）函数，在其中添加如下一行代码： 
+和数组类一样，基本类型的类也是由Java虚拟机在运行期间生成的。继续编辑class_loader.go文件，修改NewClassLoader()函数，在其中添加如下一行代码： 
 ```go
 func NewClassLoader(cp *classpath.Classpath, verboseFlag bool) *ClassLoader { 
 ... // 前面的代码不变 
@@ -235,7 +235,7 @@ loader.loadPrimitiveClasses()
 return loader 
 } 
 ```
-loadPrimitiveClasses（）方法加载void和基本类型的类，代码如下：
+loadPrimitiveClasses()方法加载void和基本类型的类，代码如下：
 ```go
 func (self *ClassLoader) loadPrimitiveClasses() { 
 for primitiveType, _ := range primitiveTypes { 
@@ -243,7 +243,7 @@ self.loadPrimitiveClass(primitiveType) // primitiveType是 void、int、 float�
 } 
 }
 ```
-生成void和基本类型类的代码在loadPrimitiveClass（）方法中，代码如下：
+生成void和基本类型类的代码在loadPrimitiveClass()方法中，代码如下：
 ```go
 func (self *ClassLoader) loadPrimitiveClass(className string) { 
 class := &Class{ 
@@ -268,7 +268,7 @@ public static final Class<Integer> TYPE
 ... // 其他代码 
 } 
 ```
-也就是说，基本类型的类是通过getstatic指令访问相应包装类的TYPE字段加载到操作数栈中的。Class.getPrimitiveClass（）是个本地方法，将在9.3.5节实现它。包装类将在9.7小节详细讨论。
+也就是说，基本类型的类是通过getstatic指令访问相应包装类的TYPE字段加载到操作数栈中的。Class.getPrimitiveClass()是个本地方法，将在9.3.5节实现它。包装类将在9.7小节详细讨论。
 ##### 9.3.4 修改ldc指令 
 和基本类型、字符串字面值一样，类对象字面值也是由ldc指令加载的。本节修改ldc指令，让它可以加载类对象。打开ch09\instructions\constants\ldc.go文件，修改_ldc()函数，改动如下：
 ```go
@@ -292,12 +292,12 @@ default: ...
 ##### 9.3.5 通过反射获取类名 
 为了支持通过反射获取类名，本小节将实现以下4个本地方法： 
 ::: tip
-·java.lang.Object.getClass（） 
-·java.lang.Class.getPrimitiveClass（） 
-·java.lang.Class.getName0（） 
-·java.lang.Class.desiredAssertionStatus0（）
+·java.lang.Object.getClass() 
+·java.lang.Class.getPrimitiveClass() 
+·java.lang.Class.getName0() 
+·java.lang.Class.desiredAssertionStatus0()
 ::: 
-Object.getClass（）就不用多说了，它返回对象的类对象引用。Class.getPrimitiveClass（）在9.3.3节提到过，基本类型的包装类在初始化时会调用这个方法给TPYE字段赋值。Character类是基本类型char的包装类，它在初始化时会调用Class.desiredAssertionStatus0（）方法，所以这个方法也需要实现。最后，之所以要实现getName0（）方法，是因为Class.getName（）方法是依赖这个本地方法工作的，该方法的代码如下：
+Object.getClass()就不用多说了，它返回对象的类对象引用。Class.getPrimitiveClass()在9.3.3节提到过，基本类型的包装类在初始化时会调用这个方法给TPYE字段赋值。Character类是基本类型char的包装类，它在初始化时会调用Class.desiredAssertionStatus0()方法，所以这个方法也需要实现。最后，之所以要实现getName0()方法，是因为Class.getName()方法是依赖这个本地方法工作的，该方法的代码如下：
 ```java
 // java.lang.Class
 public String getName() { 
@@ -307,7 +307,7 @@ this.name = name = getName0();
 return name; 
 }
 ```
-在ch09\native目录下创建java子目录，在java子目录下创建lang子目录，然后在lang目录中创建Object.go文件，在其中注册getClass（）本地方法，代码如下：
+在ch09\native目录下创建java子目录，在java子目录下创建lang子目录，然后在lang目录中创建Object.go文件，在其中注册getClass()本地方法，代码如下：
 ```go
 package lang 
 import "jvmgo/ch09/native" 
@@ -316,7 +316,7 @@ func init() {
 native.Register("java/lang/Object", "getClass", "()Ljava/lang/Class;", getClass) 
 } 
 ```
-继续编辑Object.go，实现getClass（）函数，代码如下：
+继续编辑Object.go，实现getClass()函数，代码如下：
 ```go
 // public final native Class<?> getClass(); 
 func getClass(frame *rtda.Frame) { 
@@ -325,7 +325,7 @@ class := this.Class().JClass()
 frame.OperandStack().PushRef(class) 
 }
 ```
-这是实现的第一个本地方法，所以有必要详细解释一下。首先，从局部变量表中拿到this引用。GetThis（）方法其实就是调用GetRef（0），不过为了提高代码的可读性，给LocalVars结构体添加了这个方法。有了this引用后，通过Class（）方法拿到它的Class结构体指针，进而又通过JClass（）方法拿到它的类对象。最后，把类对象推入操作数栈顶。这样，只用了3行代码，Object.getClass（）方法就实现好了。 
+这是实现的第一个本地方法，所以有必要详细解释一下。首先，从局部变量表中拿到this引用。GetThis()方法其实就是调用GetRef(0)，不过为了提高代码的可读性，给LocalVars结构体添加了这个方法。有了this引用后，通过Class()方法拿到它的Class结构体指针，进而又通过JClass()方法拿到它的类对象。最后，把类对象推入操作数栈顶。这样，只用了3行代码，Object.getClass()方法就实现好了。 
 在ch09\native\java\lang目录下创建Class.go文件，在其中注册3个本地方法，代码如下：
 ```go
 package lang 
@@ -340,7 +340,7 @@ native.Register("java/lang/Class", "desiredAssertionStatus0",
 "(Ljava/lang/Class;)Z", desiredAssertionStatus0) 
 }
 ```
-先实现getPrimitiveClass（）方法，代码如下： 
+先实现getPrimitiveClass()方法，代码如下： 
 ```go
 // static native Class<?> getPrimitiveClass(String name); 
 func getPrimitiveClass(frame *rtda.Frame) { 
@@ -351,7 +351,7 @@ class := loader.LoadClass(name).JClass()
 frame.OperandStack().PushRef(class) 
 } 
 ```
-getPrimitiveClass（）是静态方法。先从局部变量表中拿到类名，这是个Java字符串，需要把它转成Go字符串。基本类型的类已经加载到了方法区中，直接调用类加载器的Load -Class（）方法获取即可。最后，把类对象引用推入操作数栈顶。下面实现getName0（）方法，代码如下：
+getPrimitiveClass()是静态方法。先从局部变量表中拿到类名，这是个Java字符串，需要把它转成Go字符串。基本类型的类已经加载到了方法区中，直接调用类加载器的Load -Class()方法获取即可。最后，把类对象引用推入操作数栈顶。下面实现getName0()方法，代码如下：
 ```go 
 // private native String getName0(); 
 func getName0(frame *rtda.Frame) { 
@@ -362,20 +362,20 @@ nameObj := heap.JString(class.Loader(), name)
 frame.OperandStack().PushRef(nameObj) 
 } 
 ```
-首先从局部变量表中拿到this引用，这是一个类对象引用，通过Extra（）方法可以获得与之对应的Class结构体指针。然后拿到类名，转成Java字符串并推入操作数栈顶。注意这里需要的是java.lang.Object这样的类名，而非java/lang/Object。Class结构体的JavaName（）方法返回转换后的类名，代码如下：
+首先从局部变量表中拿到this引用，这是一个类对象引用，通过Extra()方法可以获得与之对应的Class结构体指针。然后拿到类名，转成Java字符串并推入操作数栈顶。注意这里需要的是java.lang.Object这样的类名，而非java/lang/Object。Class结构体的JavaName()方法返回转换后的类名，代码如下：
 ```go
 func (self *Class) JavaName() string { 
 return strings.Replace(self.name, "/", ".", -1) 
 }
 ```
-本书不讨论断言。desiredAssertionStatus0（）方法把false推入操作数栈顶，代码如下：
+本书不讨论断言。desiredAssertionStatus0()方法把false推入操作数栈顶，代码如下：
 ```go
 // private static native boolean desiredAssertionStatus0(Class<?> clazz);
 func desiredAssertionStatus0(frame *rtda.Frame) { 
 frame.OperandStack().PushBoolean(false) 
 }
 ```
-4个本地方法都实现好了，而且也已经在init（）函数中注册，那么可以进行测试了吗？还不行，因为init（）函数还没有机会执行。
+4个本地方法都实现好了，而且也已经在init()函数中注册，那么可以进行测试了吗？还不行，因为init()函数还没有机会执行。
 编辑ch09\instructions\reserved\invokenative.go文件，在其中导入lang包，代码如下：
 ```go
 package reserved 
@@ -420,7 +420,7 @@ public class GetClassTest {
 运行结果如图9-2所示。
 ![9-2](./img/9-2.png)   
 图9-2 GetClassTest程序执行结果
-#### 9.4 字符串拼接和String.intern（）方法 
+#### 9.4 字符串拼接和String.intern()方法 
 ##### 9.4.1 Java类库 
 在Java语言中，通过加号来拼接字符串。作为优化，javac编辑器会把字符串拼接操作转换成StringBuilder的使用。例如下面这段Java代码：
 ```java
@@ -436,9 +436,9 @@ System.out.println(str);
 ```
 为了运行上面的代码，本节将实现以下3个本地方法：
 ::: tip 
-- System.arrayCopy（） 
-- Float.floatToRawIntBits（）
-- Double.doubleToRawLongBits（）
+- System.arrayCopy() 
+- Float.floatToRawIntBits()
+- Double.doubleToRawLongBits()
 ::: 
 这些方法是在哪里使用的呢?StringBuilder.append()方法只是调用了超类的append()方法，代码如下：
 ```java
@@ -450,7 +450,7 @@ AbstractStringBuilder.append()
 return this; 
 }
 ```
-AbstractStringBuilder.append（）方法调用了String.getChars（）方法获取字符数组，代码如下：
+AbstractStringBuilder.append()方法调用了String.getChars()方法获取字符数组，代码如下：
 ```java
 // java.lang.AbstractStringBuilder 
 public AbstractStringBuilder append(String str) { 
@@ -462,7 +462,7 @@ count += len;
 return this; 
 }
 ```
-String.getChars（）方法调用了System.arraycopy（）方法拷贝数组，代码如下：
+String.getChars()方法调用了System.arraycopy()方法拷贝数组，代码如下：
 ```java
 // java.lang.String 
 public void getChars(int srcBegin, int srcEnd, char dst[], int dstBegin) { 
@@ -470,7 +470,7 @@ public void getChars(int srcBegin, int srcEnd, char dst[], int dstBegin) {
 System.arraycopy(value, srcBegin, dst, dstBegin, srcEnd - srcBegin); 
 } 
 ```
-StringBuilder.toString（）方法的代码如下：
+StringBuilder.toString()方法的代码如下：
 ```java
 // java.lang.StringBuilder 
 @Override 
@@ -479,7 +479,7 @@ public String toString() {
 return new String(value, 0, count); 
 } 
 ```
-它调用了String的构造函数，这个构造函数调用了Arrays.copyOfRange（）方法，代码如下：
+它调用了String的构造函数，这个构造函数调用了Arrays.copyOfRange()方法，代码如下：
 ```java
 // java.lang.String 
 public String(char value[], int offset, int count) { 
@@ -487,7 +487,7 @@ public String(char value[], int offset, int count) {
 this.value = Arrays.copyOfRange(value, offset, offset+count); 
 }
 ```
-Arrays.copyOfRange（）调用了Math.min（）方法，代码如下： 
+Arrays.copyOfRange()调用了Math.min()方法，代码如下： 
 ```java
 // java.util.Arrays 
 public static char[] copyOfRange(char[] original, int from, int to) { 
@@ -498,7 +498,7 @@ System.arraycopy(original, from, copy, 0,Math.min(original.length - from, newLen
 return copy; 
 }
 ```
-Math类在初始化时需要调用Float.floatToRawIntBits（）和Double.doubleToRawLong -Bits（）方法，代码如下：
+Math类在初始化时需要调用Float.floatToRawIntBits()和Double.doubleToRawLong -Bits()方法，代码如下：
 ```java
 package java.lang; 
 public final class Math { 
@@ -508,8 +508,8 @@ private static long negativeZeroDoubleBits = Double.doubleToRawLongBits(-0.0d);
 } 
 ```
 Java类库介绍完了，下面实现本地方法。
-##### 9.4.2 System.arraycopy（）方法 
-在ch09\native\java\lang目录下创建System.go文件，在其中注册arraycopy（）方法，代码如下：
+##### 9.4.2 System.arraycopy()方法 
+在ch09\native\java\lang目录下创建System.go文件，在其中注册arraycopy()方法，代码如下：
 ```go
 package lang 
 import "jvmgo/ch09/native" 
@@ -519,7 +519,7 @@ func init() {
     native.Register("java/lang/System", "arraycopy", "(Ljava/lang/Object;ILjava/lang/Object;II)V", arraycopy) 
 }
 ```
-继续编辑System.go，实现arraycopy（）方法。代码稍微有些复杂，先来看第一部分。
+继续编辑System.go，实现arraycopy()方法。代码稍微有些复杂，先来看第一部分。
  ```go
 // public static native void arraycopy( 
 // Object src, int srcPos, Object dest, int destPos, int length) 
@@ -544,7 +544,7 @@ if !checkArrayCopy(src, dest) {
     panic("java.lang.ArrayStoreException") 
 }
 ```
-checkArrayCopy（）函数的代码稍后给出。接下来检查srcPos、destPos和length参数，如果有问题则抛出IndexOutOfBoundsException异常，代码如下：
+checkArrayCopy()函数的代码稍后给出。接下来检查srcPos、destPos和length参数，如果有问题则抛出IndexOutOfBoundsException异常，代码如下：
 ```go
 if srcPos < 0 || destPos < 0 || length < 0 || 
     srcPos+length > src.ArrayLength() || 
@@ -552,12 +552,12 @@ if srcPos < 0 || destPos < 0 || length < 0 ||
     panic("java.lang.IndexOutOfBoundsException") 
 }
 ```
-最后，参数合法，调用ArrayCopy（）函数进行数组拷贝，代码如下：
+最后，参数合法，调用ArrayCopy()函数进行数组拷贝，代码如下：
 ```go
 heap.ArrayCopy(src, dest, srcPos, destPos, length) 
 }
 ```
-checkArrayCopy（）函数首先确保src和dest都是数组，然后检查数组类型。如果两者都是引用数组，则可以拷贝，否则两者必须是相同类型的基本类型数组，代码如下：
+checkArrayCopy()函数首先确保src和dest都是数组，然后检查数组类型。如果两者都是引用数组，则可以拷贝，否则两者必须是相同类型的基本类型数组，代码如下：
 ```go
 func checkArrayCopy(src, dest *heap.Object) bool { 
 srcClass := src.Class() 
@@ -572,7 +572,7 @@ return srcClass == destClass
 return true 
 }
 ```
-Class结构体的IsPrimitive（）函数判断类是否是基本类型的类， 代码如下：
+Class结构体的IsPrimitive()函数判断类是否是基本类型的类， 代码如下：
 ```go
 func (self *Class) IsPrimitive() bool { 
 _, ok := primitiveTypes[self.name] 
@@ -594,9 +594,9 @@ copy(_dst, _src)
 } 
 }
 ```
-利用Go的内置函数copy（）进行slice拷贝。为了节约篇幅，上面的代码只给出了int数组和对象数组的case语句，其他情况代码大同小异。
-##### 9.4.3 Float.floatToRawIntBits（）和 Double.doubleToRawLongBits（）方法 
-Float.floatToRawIntBits（）和Double.doubleToRawLongBits（）返回浮点数的编码，这两个方法大同小异，以Float为例进行介绍。在ch09\native\java\lang目录下创建Float.go文件，在其中注册floatToRawIntBits（）本地方法，代码如下：
+利用Go的内置函数copy()进行slice拷贝。为了节约篇幅，上面的代码只给出了int数组和对象数组的case语句，其他情况代码大同小异。
+##### 9.4.3 Float.floatToRawIntBits()和 Double.doubleToRawLongBits()方法 
+Float.floatToRawIntBits()和Double.doubleToRawLongBits()返回浮点数的编码，这两个方法大同小异，以Float为例进行介绍。在ch09\native\java\lang目录下创建Float.go文件，在其中注册floatToRawIntBits()本地方法，代码如下：
 ```go
 package lang 
 import "math" 
@@ -606,7 +606,7 @@ func init() {
     native.Register("java/lang/Float", "floatToRawIntBits", "(F)I", floatToRawIntBits) 
 }
 ```
-Go语言的math包提供了一个类似函数：Float32bits（），正好可以用来实现floatToRaw-IntBits（）方法，代码如下：
+Go语言的math包提供了一个类似函数：Float32bits()，正好可以用来实现floatToRaw-IntBits()方法，代码如下：
 ```go
 // public static native int floatToRawIntBits(float value); 
 func floatToRawIntBits(frame *rtda.Frame) { 
@@ -615,8 +615,8 @@ func floatToRawIntBits(frame *rtda.Frame) {
     frame.OperandStack().PushInt(int32(bits)) 
 }
 ```
-##### 9.4.4 String.intern（）方法 
-第8章讨论字符串时，实现了字符串池，但它只能在虚拟机内部使用。下面实现String类的intern（）方法，让Java类库也可以使用它。在ch09\native\java\lang目录下创建String.go，在其中注册intern（）方法，代码如下：
+##### 9.4.4 String.intern()方法 
+第8章讨论字符串时，实现了字符串池，但它只能在虚拟机内部使用。下面实现String类的intern()方法，让Java类库也可以使用它。在ch09\native\java\lang目录下创建String.go，在其中注册intern()方法，代码如下：
 ```go
 package lang 
 import "jvmgo/ch09/native" 
@@ -626,7 +626,7 @@ func init() {
     native.Register("java/lang/String", "intern", "()Ljava/lang/String;", intern) 
 }
 ```
-继续编辑String.go文件，实现intern（）方法，代码如下：
+继续编辑String.go文件，实现intern()方法，代码如下：
 ```go
 // public native String intern(); 
 func intern(frame *rtda.Frame) { 
@@ -635,7 +635,7 @@ func intern(frame *rtda.Frame) {
     frame.OperandStack().PushRef(interned) 
 }
 ```
-如果字符串还没有入池，把它放入并返回该字符串，否则找到已入池字符串并返回。这个逻辑在InternString（）函数中（ch09\rtda\heap\string_pool.go），代码如下：
+如果字符串还没有入池，把它放入并返回该字符串，否则找到已入池字符串并返回。这个逻辑在InternString()函数中(ch09\rtda\heap\string_pool.go)，代码如下：
 ```go
 func InternString(jStr *Object) *Object { 
     goStr := GoString(jStr) 
@@ -668,8 +668,8 @@ public class StringTest {
 重新编译本章代码，然后测试StringTest程序，结果如图9-3所示。 
 ![9-3](./img/9-3.png)    
 图9-3 StringTest程序执行结果
-#### 9.5 Object.hashCode（）、equals（）和toString（） 
-Object类有3个非常重要的方法：hashCode（）返回对象的哈希码；equals（）用来比较两个对象是否“相同”；toString（）返回对象的字符串表示。hashCode（）是个本地方法，equals（）和toString（）则是用Java写的，它们的代码如下：
+#### 9.5 Object.hashCode()、equals()和toString() 
+Object类有3个非常重要的方法：hashCode()返回对象的哈希码；equals()用来比较两个对象是否“相同”；toString()返回对象的字符串表示。hashCode()是个本地方法，equals()和toString()则是用Java写的，它们的代码如下：
 ```java
 package java.lang; 
 public class Object { 
@@ -683,7 +683,7 @@ public class Object {
     } 
 }
 ```
-下面实现hashCode（）方法。打开ch09\native\java\lang\Object.go，导入unsafe包并注册hashCode（）方法，代码如下：
+下面实现hashCode()方法。打开ch09\native\java\lang\Object.go，导入unsafe包并注册hashCode()方法，代码如下：
 ```go
 package lang 
 import "unsafe" 
@@ -694,7 +694,7 @@ native.Register("java/lang/Object", "getClass", "()Ljava/lang/Class;", getClass)
 native.Register("java/lang/Object", "hashCode", "()I", hashCode) 
 }
 ```
-继续编辑Object.go，实现hashCode（）方法，代码如下：
+继续编辑Object.go，实现hashCode()方法，代码如下：
 ```go
 // public native int hashCode(); 
 func hashCode(frame *rtda.Frame) { 
@@ -703,7 +703,7 @@ func hashCode(frame *rtda.Frame) {
     frame.OperandStack().PushInt(hash) 
 }
 ```
-把对象引用（Object结构体指针）转换成uintptr类型，然后强制转换成int32推入操作数栈顶。
+把对象引用(Object结构体指针)转换成uintptr类型，然后强制转换成int32推入操作数栈顶。
 
 本节只实现这一个本地方法。重新编译本章代码，然后测试下面的Java程序： 
 ```java
@@ -722,13 +722,13 @@ public class ObjectTest {
 ObjectTest程序执行结果如图9-4所示。
 ![9-4](./img/9-4.png)   
 图9-4 ObjectTest程序执行结果
-#### 9.6 Object.clone（） 
-Object类提供了clone（）方法，用来支持对象克隆。这也是一个本地方法，代码如下：
+#### 9.6 Object.clone() 
+Object类提供了clone()方法，用来支持对象克隆。这也是一个本地方法，代码如下：
 ```java 
 // java.lang.Object 
 protected native Object clone() throws CloneNotSupportedException; 
 ```
-本节实现这个方法。在ch09\native\java\lang\Object.go文件中注册clone（）方法，代码如下：
+本节实现这个方法。在ch09\native\java\lang\Object.go文件中注册clone()方法，代码如下：
 ```go
 func init() { 
     native.Register(jlObject, "getClass", "()Ljava/lang/Class;", getClass) 
@@ -736,7 +736,7 @@ func init() {
     native.Register(jlObject, "clone", "()Ljava/lang/Object;", clone) 
 }
 
-继续编辑Object.go，实现clone（）方法，代码如下：
+继续编辑Object.go，实现clone()方法，代码如下：
 ```go
 func clone(frame *rtda.Frame) { 
     this := frame.LocalVars().GetThis() 
@@ -746,7 +746,7 @@ func clone(frame *rtda.Frame) {
     }
     frame.OperandStack().PushRef(this.Clone()) 
 } 
-如果类没有实现Cloneable接口，则抛出CloneNotSupportedException异常，否则调用Object结构体的Clone（）方法克隆对象，然后把对象副本引用推入操作数栈顶。Clone（）实现稍微有些长，把它放在ch09\rtda\heap\object_clone.go文件中，代码如下：
+如果类没有实现Cloneable接口，则抛出CloneNotSupportedException异常，否则调用Object结构体的Clone()方法克隆对象，然后把对象副本引用推入操作数栈顶。Clone()实现稍微有些长，把它放在ch09\rtda\heap\object_clone.go文件中，代码如下：
 ```go
 func (self *Object) Clone() *Object { 
     return &Object{ 
@@ -755,7 +755,7 @@ func (self *Object) Clone() *Object {
     } 
 }
 ```
-数据克隆逻辑在cloneData（）函数中，代码如下：
+数据克隆逻辑在cloneData()函数中，代码如下：
 ```go
 func (self *Object) cloneData() interface{} { 
     switch self.data.(type) { 
@@ -806,8 +806,8 @@ CloneTest程序执行结果如图9-5所示。
 ![9-5](./img/9-5.png)  
 图9-5 CloneTest程序执行结果
 #### 9.7 自动装箱和拆箱 
-前面讨论过，为了更好地融入Java的对象系统，每种基本类型都有一个包装类与之对应。从Java 5开始，Java语法增加了自动装箱和拆箱（autoboxing/unboxing）能力，可以在必要时把基本类型转换成包装类型或者反之。这个增强完全是由编译器完成的，Java虚拟机没有做任何调整。 
-以int类型为例，它的包装类是java.lang.Integer。它提供了2个方法来帮助编译器在int变量和Integer对象之间转换：静态方法value（）把int变量包装成Integer对象；实例方法intValue（）返回被包装的int变量。这两个方法的代码如下：
+前面讨论过，为了更好地融入Java的对象系统，每种基本类型都有一个包装类与之对应。从Java 5开始，Java语法增加了自动装箱和拆箱(autoboxing/unboxing)能力，可以在必要时把基本类型转换成包装类型或者反之。这个增强完全是由编译器完成的，Java虚拟机没有做任何调整。 
+以int类型为例，它的包装类是java.lang.Integer。它提供了2个方法来帮助编译器在int变量和Integer对象之间转换：静态方法value()把int变量包装成Integer对象；实例方法intValue()返回被包装的int变量。这两个方法的代码如下：
 ```java
 package java.lang; 
 public final class Integer extends Number implements Comparable<Integer> { 
@@ -823,7 +823,7 @@ public final class Integer extends Number implements Comparable<Integer> {
     } 
 }
 ```
-由上面的代码可知，Integer.valueOf（）方法并不是每次都创建Integer（）对象，而是维护了一个缓存池IntegerCache。对于比较小（默认是–128~127）的int变量，在IntegerCache初始化时就预先加载到了池中，需要用时直接从池里取即可。IntegerCache是Integer类的内部类，为了便于参考，下面给出它的完整代码。 
+由上面的代码可知，Integer.valueOf()方法并不是每次都创建Integer()对象，而是维护了一个缓存池IntegerCache。对于比较小(默认是–128~127)的int变量，在IntegerCache初始化时就预先加载到了池中，需要用时直接从池里取即可。IntegerCache是Integer类的内部类，为了便于参考，下面给出它的完整代码。 
 ```go
 private static class IntegerCache { 
     static final int low = -128; 
@@ -854,8 +854,8 @@ private static class IntegerCache {
     private IntegerCache() {} 
     }
 ```
-具体细节就不解释了，需要说明的是IntegerCache在初始化时需要确定缓存池中Inte -ger对象的上限值，为此它调用了sun.misc.VM类的getSavedProperty（）方法。要想让VM正确初始化需要做很多工作，这个工作推迟到第11章进行。这里先用一个hack让VM.get -SavedProperty（）方法返回非null值，以便IntegerCache可以正常初始化。 
-在ch09\native目录下创建sun\misc子目录，在其中创建VM.go文件，然后在VM.go文件中注册initialize（）方法，代码如下：
+具体细节就不解释了，需要说明的是IntegerCache在初始化时需要确定缓存池中Inte -ger对象的上限值，为此它调用了sun.misc.VM类的getSavedProperty()方法。要想让VM正确初始化需要做很多工作，这个工作推迟到第11章进行。这里先用一个hack让VM.get -SavedProperty()方法返回非null值，以便IntegerCache可以正常初始化。 
+在ch09\native目录下创建sun\misc子目录，在其中创建VM.go文件，然后在VM.go文件中注册initialize()方法，代码如下：
 ```go
 package misc 
 import "jvmgo/ch09/instructions/base" 
@@ -866,7 +866,7 @@ func init() {
     native.Register("sun/misc/VM", "initialize", "()V", initialize) 
 }
 ```
-initialize（）方法的实现如下： 
+initialize()方法的实现如下： 
 ```go
 // private static native void initialize(); 
 func initialize(frame *rtda.Frame) { 

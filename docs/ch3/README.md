@@ -21,9 +21,9 @@ D:\go\workspace\src
 [1]: 这个过程比较无趣，也容易出错。可以使用编辑器提供的“搜索和替换”功能来完成这项工作。
 
 #### 3.1 class文件 
-作为类（或者接口） [1] 信息的载体，每个class文件都完整地定义了一个类。为了使Java程序可以“编写一次，处处运行”，Java虚拟机规范对class文件格式进行了严格的规定。但是另一方面，对于从哪里加载class文件，给了足够多的自由。由第2章可知，Java虚拟机实现可以从文件系统读取和从JAR（或ZIP）压缩包中提取class文件。除此之外，也可以通过网络下载、从数据库加载，甚至是在运行中直接生成class文件。Java虚拟机规范（和本书）中所指的class文件，并非特指位于磁盘中的.class文件，而是泛指任何格式符合规范的class数据。 
+作为类(或者接口) [1] 信息的载体，每个class文件都完整地定义了一个类。为了使Java程序可以“编写一次，处处运行”，Java虚拟机规范对class文件格式进行了严格的规定。但是另一方面，对于从哪里加载class文件，给了足够多的自由。由第2章可知，Java虚拟机实现可以从文件系统读取和从JAR(或ZIP)压缩包中提取class文件。除此之外，也可以通过网络下载、从数据库加载，甚至是在运行中直接生成class文件。Java虚拟机规范(和本书)中所指的class文件，并非特指位于磁盘中的.class文件，而是泛指任何格式符合规范的class数据。 
 
-构成class文件的基本数据单位是字节，可以把整个class文件当成一个字节流来处理。稍大一些的数据由连续多个字节构成，这些数据在class文件中以大端（big-endian）方式存储。为了描述class文件格式，Java虚拟机规范定义了u1、u2和u4三种数据类型来表示1、2和4字节无符号整数，分别对应Go语言的uint8、uint16和uint32类型。相同类型的多条数据一般按表（table）的形式存储在class文件中。表由表头和表项（item）构成，表头是u2或u4整数。假设表头是n，后面就紧跟着n个表项数据。 
+构成class文件的基本数据单位是字节，可以把整个class文件当成一个字节流来处理。稍大一些的数据由连续多个字节构成，这些数据在class文件中以大端(big-endian)方式存储。为了描述class文件格式，Java虚拟机规范定义了u1、u2和u4三种数据类型来表示1、2和4字节无符号整数，分别对应Go语言的uint8、uint16和uint32类型。相同类型的多条数据一般按表(table)的形式存储在class文件中。表由表头和表项(item)构成，表头是u2或u4整数。假设表头是n，后面就紧跟着n个表项数据。 
 
 Java虚拟机规范使用一种类似C语言的结构体语法来描述class文件格式。整个class文件被描述为一个ClassFile结构，代码如下：
 ```java
@@ -91,7 +91,7 @@ func (self *ClassReader) readUint64() uint64 {...}
 func (self *ClassReader) readUint16s() []uint16 {...} 
 func (self *ClassReader) readBytes(length uint32) []byte {...}
  ```
-ClassReader只是[]byte类型的包装而已。readUint8（）读取u1类型数据，代码如下： 
+ClassReader只是[]byte类型的包装而已。readUint8()读取u1类型数据，代码如下： 
 ```go
 func (self *ClassReader) readUint8() uint8 { 
     val := self.data[0] 
@@ -99,7 +99,7 @@ func (self *ClassReader) readUint8() uint8 {
     return val 
 }
 ```
-注意，ClassReader并没有使用索引记录数据位置，而是使用Go语言的reslice语法跳过已经读取的数据。readUint16（）读取u2类型数据，代码如下： 
+注意，ClassReader并没有使用索引记录数据位置，而是使用Go语言的reslice语法跳过已经读取的数据。readUint16()读取u2类型数据，代码如下： 
 ```go
 func (self *ClassReader) readUint16() uint16 { 
     val := binary.BigEndian.Uint16(self.data) 
@@ -107,7 +107,7 @@ func (self *ClassReader) readUint16() uint16 {
     return val 
 }
 ```
-Go标准库encoding/binary包中定义了一个变量BigEndian，正好可以从[]byte中解码多字节数据。readUint32（）读取u4类型数据，代码如下： 
+Go标准库encoding/binary包中定义了一个变量BigEndian，正好可以从[]byte中解码多字节数据。readUint32()读取u4类型数据，代码如下： 
 ```go
 func (self *ClassReader) readUint32() uint32 { 
     val := binary.BigEndian.Uint32(self.data) 
@@ -115,7 +115,7 @@ func (self *ClassReader) readUint32() uint32 {
     return val 
 }
 ``` 
-readUint64（）读取uint64（Java虚拟机规范并没有定义u8）类型数据，代码如下：
+readUint64()读取uint64(Java虚拟机规范并没有定义u8)类型数据，代码如下：
 ```go 
 func (self *ClassReader) readUint64() uint64 { 
     val := binary.BigEndian.Uint64(self.data) 
@@ -123,7 +123,7 @@ func (self *ClassReader) readUint64() uint64 {
     return val 
 }
 ```
-readUint16s（）读取uint16表，表的大小由开头的uint16数据指出，代码如下： 
+readUint16s()读取uint16表，表的大小由开头的uint16数据指出，代码如下： 
 ```go
 func (self *ClassReader) readUint16s() []uint16 { 
     n := self.readUint16() 
@@ -134,7 +134,7 @@ func (self *ClassReader) readUint16s() []uint16 {
     return s 
 }
 ```
-最后一个方法是readBytes（），用于读取指定数量的字节，代码如下： 
+最后一个方法是readBytes()，用于读取指定数量的字节，代码如下： 
 ```go
 func (self *ClassReader) readBytes(n uint32) []byte { 
     bytes := self.data[:n] 
@@ -178,7 +178,7 @@ func (self *ClassFile) SuperClassName() string {...}func (self *ClassFile) Inter
 ```
 相比Java语言，Go的访问控制非常简单：只有公开和私有两种。所有首字母大写的类型、结构体、字段、变量、函数、方法等都是公开的，可供其他包使用。首字母小写则是私有的，只能在包内部使用。在本书的代码中，尽量只公开必要的变量、字段、函数和方法等。但是为了提高代码可读性，所有的结构体都是公开的，也就是首字母是大写的。 
 
-Parse（）函数把[]byte解析成ClassFile结构体，代码如下： 
+Parse()函数把[]byte解析成ClassFile结构体，代码如下： 
 ```go
 func Parse(classData []byte) (cf *ClassFile, err error) { 
     defer func() { 
@@ -196,7 +196,7 @@ func Parse(classData []byte) (cf *ClassFile, err error) {
     return 
 } 
 ```
-Go语言没有异常处理机制，只有一个panic-recover机制。read（）方法依次调用其他方法解析class文件，代码如下：
+Go语言没有异常处理机制，只有一个panic-recover机制。read()方法依次调用其他方法解析class文件，代码如下：
 ```go
 func (self *ClassFile) read(reader *ClassReader) { 
     self.readAndCheckMagic(reader) // 见3.2.3
@@ -211,19 +211,19 @@ func (self *ClassFile) read(reader *ClassReader) {
     self.attributes = readAttributes(reader, self.constantPool) //见3.4 
 } 
 ```
-MajorVersion（）等6个方法是Getter方法，把结构体的字段暴露给其他包使用。MajorVersion（）的代码如下：
+MajorVersion()等6个方法是Getter方法，把结构体的字段暴露给其他包使用。MajorVersion()的代码如下：
 ```go
 func (self *ClassFile) MajorVersion() uint16 { 
     return self.majorVersion 
 }
 ```
-和Java有所不同，Go的Getter方法不以“get”开头。由于Getter方法非常简单，只是返回字段而已，为了节约篇幅，后文中不再给出Getter方法的代码。ClassName（）从常量池查找类名，代码如下：
+和Java有所不同，Go的Getter方法不以“get”开头。由于Getter方法非常简单，只是返回字段而已，为了节约篇幅，后文中不再给出Getter方法的代码。ClassName()从常量池查找类名，代码如下：
 ```go
 func (self *ClassFile) ClassName() string { 
     return self.constantPool.getClassName(self.thisClass) 
 }
 ```
-SuperClassName（）从常量池查找超类名，代码如下：
+SuperClassName()从常量池查找超类名，代码如下：
 ```go
 func (self *ClassFile) SuperClassName() string { 
     if self.superClass > 0 { 
@@ -233,7 +233,7 @@ func (self *ClassFile) SuperClassName() string {
 }
 ```
  
-InterfaceNames（）从常量池查找接口名，代码如下：
+InterfaceNames()从常量池查找接口名，代码如下：
 ```go
 func (self *ClassFile) InterfaceNames() []string { 
     interfaceNames := make([]string, len(self.interfaces)) 
@@ -243,9 +243,9 @@ func (self *ClassFile) InterfaceNames() []string {
     return interfaceNames 
 }
 ``` 
-下面详细介绍class文件的各个部分（常量池和属性表比较复杂，放到3.3和3.4节单独讨论）。
+下面详细介绍class文件的各个部分(常量池和属性表比较复杂，放到3.3和3.4节单独讨论)。
 ##### 3.2.3 魔数 
-很多文件格式都会规定满足该格式的文件必须以某几个固定字节开头，这几个字节主要起标识作用，叫作魔数（magic number）。 例如PDF文件以4字节“%PDF”（0x25、0x50、0x44、0x46）开头，ZIP文件以2字节“PK”（0x50、0x4B）开头。class文件的魔数是“0xCAFEBABE”。readAndCheckMagic（）方法的代码如下： 
+很多文件格式都会规定满足该格式的文件必须以某几个固定字节开头，这几个字节主要起标识作用，叫作魔数(magic number)。 例如PDF文件以4字节“%PDF”(0x25、0x50、0x44、0x46)开头，ZIP文件以2字节“PK”(0x50、0x4B)开头。class文件的魔数是“0xCAFEBABE”。readAndCheckMagic()方法的代码如下： 
 ```go
 func (self *ClassFile) readAndCheckMagic(reader *ClassReader) { 
     magic := reader.readUint32() 
@@ -254,16 +254,16 @@ func (self *ClassFile) readAndCheckMagic(reader *ClassReader) {
     } 
 }
 ```
-Java虚拟机规范规定，如果加载的class文件不符合要求的格式，Java虚拟机实现就抛出java.lang.ClassFormatError异常。但是因为我们才刚刚开始编写虚拟机，还无法抛出异常，所以暂时先调用panic（）方法终止程序执行。用classpy打开ClassFileTest.class文件，可以看到，开头4字节确实是0xCAFEBABE，如图3-1所示。
+Java虚拟机规范规定，如果加载的class文件不符合要求的格式，Java虚拟机实现就抛出java.lang.ClassFormatError异常。但是因为我们才刚刚开始编写虚拟机，还无法抛出异常，所以暂时先调用panic()方法终止程序执行。用classpy打开ClassFileTest.class文件，可以看到，开头4字节确实是0xCAFEBABE，如图3-1所示。
 ![3-1](./img/3-1.png)
 图3-1 用classpy观察魔数
 
 ##### 3.2.4 版本号 
-魔数之后是class文件的次版本号和主版本号，都是u2类型。假设某class文件的主版本号是M，次版本号是m，那么完整的版本号可以表示成“M.m”的形式。次版本号只在J2SE 1.2之前用过，从1.2 开始基本上就没什么用了（都是0）。主版本号在J2SE 1.2之前是45，从1.2开始，每次有大的Java版本发布，都会加1。表3-2列出了到本书写作为止，使用过的class文件版本号。
+魔数之后是class文件的次版本号和主版本号，都是u2类型。假设某class文件的主版本号是M，次版本号是m，那么完整的版本号可以表示成“M.m”的形式。次版本号只在J2SE 1.2之前用过，从1.2 开始基本上就没什么用了(都是0)。主版本号在J2SE 1.2之前是45，从1.2开始，每次有大的Java版本发布，都会加1。表3-2列出了到本书写作为止，使用过的class文件版本号。
 
 表3-2 class文件版本号
  
-特定的Java虚拟机实现只能支持版本号在某个范围内的class文件。Oracle的实现是完全向后兼容的，比如Java SE 8支持版本号为45.0~52.0的class文件。如果版本号不在支持的范围内，Java虚拟机实现就抛出java.lang.UnsupportedClassVersionError异常。我们参考Java 8，支持版本号为45.0~52.0的class文件。如果遇到其他版本号，暂时先调用panic（）方法终止程序执行。下面是readAndCheckVersion（）方法的代码。
+特定的Java虚拟机实现只能支持版本号在某个范围内的class文件。Oracle的实现是完全向后兼容的，比如Java SE 8支持版本号为45.0~52.0的class文件。如果版本号不在支持的范围内，Java虚拟机实现就抛出java.lang.UnsupportedClassVersionError异常。我们参考Java 8，支持版本号为45.0~52.0的class文件。如果遇到其他版本号，暂时先调用panic()方法终止程序执行。下面是readAndCheckVersion()方法的代码。
 ```go
 func (self *ClassFile) readAndCheckVersion(reader *ClassReader) { 
     self.minorVersion = reader.readUint16() 
@@ -279,7 +279,7 @@ func (self *ClassFile) readAndCheckVersion(reader *ClassReader) {
     panic("java.lang.UnsupportedClassVersionError!") 
 } 
 ```
-因为笔者使用JDK8编译ClassFileTest类，所以主版本号是52（0x34），次版本号是0，如图3-2所示。 
+因为笔者使用JDK8编译ClassFileTest类，所以主版本号是52(0x34)，次版本号是0，如图3-2所示。 
 ![3-2](./img/3-2.png)
 图3-2 用classpy观察版本号
 
@@ -290,7 +290,7 @@ ClassFileTest的类访问标志是0x21，如图3-3所示。
 ![3-3](./img/3-3.png) 
 图3-3 用classpy观察类访问标志
 ##### 3.2.6 类和超类索引 
-类访问标志之后是两个u2类型的常量池索引，分别给出类名和超类名。class文件存储的类名类似完全限定名，但是把点换成了斜线，Java语言规范把这种名字叫作二进制名（binary names）。因为每个类都有名字，所以thisClass必须是有效的常量池索引。除 
+类访问标志之后是两个u2类型的常量池索引，分别给出类名和超类名。class文件存储的类名类似完全限定名，但是把点换成了斜线，Java语言规范把这种名字叫作二进制名(binary names)。因为每个类都有名字，所以thisClass必须是有效的常量池索引。除 
 
 java.lang.Object之外，其他类都有超类，所以superClass只在Object.class中是0，在其他class文件中必须是有效的常量池索引。如图3-4所示，ClassFileTest的类索引是5，超类索引是6。
 ![3-4](./img/3-4.png)
@@ -327,7 +327,7 @@ func (self *MemberInfo) AccessFlags() uint16 {...} // getter
 func (self *MemberInfo) Name() string {...} 
 func (self *MemberInfo) Descriptor() string {...} 
 ```
-cp字段保存常量池指针，后面会用到它。readMembers（）读取字段表或方法表，代码如下： 
+cp字段保存常量池指针，后面会用到它。readMembers()读取字段表或方法表，代码如下： 
 ```go
 func readMembers(reader *ClassReader, cp ConstantPool) []*MemberInfo { 
     memberCount := reader.readUint16() 
@@ -338,7 +338,7 @@ func readMembers(reader *ClassReader, cp ConstantPool) []*MemberInfo {
     return members 
 }
 ```
-readMember（）函数读取字段或方法数据，代码如下： 
+readMember()函数读取字段或方法数据，代码如下： 
 ```go
 func readMember(reader *ClassReader, cp ConstantPool) *MemberInfo { 
     return &MemberInfo{ 
@@ -350,7 +350,7 @@ func readMember(reader *ClassReader, cp ConstantPool) *MemberInfo {
     }
 }
 ```
-属性表和readAttributes（）函数将在3.4节介绍。Name（）从常量池查找字段或方法名，Descriptor（）从常量池查找字段或方法描述符，代码如下：
+属性表和readAttributes()函数将在3.4节介绍。Name()从常量池查找字段或方法名，Descriptor()从常量池查找字段或方法描述符，代码如下：
 ```go
 func (self *MemberInfo) Name() string {
     return 	self.cp.getUtf8(self.nameIndex) 
@@ -360,7 +360,7 @@ func (self *MemberInfo) Descriptor() string {
 }
 ```
 
-第6章会进一步讨论字段和方法。ClassFileTest有8个字段和两个方法（其中`<init>`是编译器生成的默认构造函数），如图3-6和图3-7所示。
+第6章会进一步讨论字段和方法。ClassFileTest有8个字段和两个方法(其中`<init>`是编译器生成的默认构造函数)，如图3-6和图3-7所示。
 ![3-6](./img/3-6.png)
 图3-6 用classpy观察字段表
 ![3-7](./img/3-7.png)
@@ -378,7 +378,7 @@ func (self ConstantPool) getNameAndType(index uint16) (string, string) {...}
 func (self ConstantPool) getClassName(index uint16) string {...} 
 func (self ConstantPool) getUtf8(index uint16) string {...} 
 ```
-常量池实际上也是一个表，但是有三点需要特别注意。第一，表头给出的常量池大小比实际大1。假设表头给出的值是n，那么常量池的实际大小是n–1。第二，有效的常量池索引是1~n–1。0是无效索引，表示不指向任何常量。第三，CONSTANT_Long_info和CONSTANT_Double_info各占两个位置。也就是说，如果常量池中存在这两种常量，实际的常量数量比n–1还要少，而且1~n–1的某些数也会变成无效索引。常量池由readConstantPool（）函数读取，代码如下： 
+常量池实际上也是一个表，但是有三点需要特别注意。第一，表头给出的常量池大小比实际大1。假设表头给出的值是n，那么常量池的实际大小是n–1。第二，有效的常量池索引是1~n–1。0是无效索引，表示不指向任何常量。第三，CONSTANT_Long_info和CONSTANT_Double_info各占两个位置。也就是说，如果常量池中存在这两种常量，实际的常量数量比n–1还要少，而且1~n–1的某些数也会变成无效索引。常量池由readConstantPool()函数读取，代码如下： 
 ```go
 func readConstantPool(reader *ClassReader) ConstantPool { 
     cpCount := int(reader.readUint16()) 
@@ -393,7 +393,7 @@ func readConstantPool(reader *ClassReader) ConstantPool {
     return cp 
 }
 ```
-getConstantInfo（）方法按索引查找常量，代码如下： 
+getConstantInfo()方法按索引查找常量，代码如下： 
 ```go
 func (self ConstantPool) getConstantInfo(index uint16) ConstantInfo { 
     if cpInfo := self[index]; cpInfo != nil { 
@@ -402,7 +402,7 @@ func (self ConstantPool) getConstantInfo(index uint16) ConstantInfo {
     panic("Invalid constant pool index!") 
 }
 ```
-getNameAndType（）方法从常量池查找字段或方法的名字和描述符，代码如下：
+getNameAndType()方法从常量池查找字段或方法的名字和描述符，代码如下：
 ```go
 func (self ConstantPool) getNameAndType(index uint16) (string, string) { 
     ntInfo := self.getConstantInfo(index).(*ConstantNameAndTypeInfo) 
@@ -411,13 +411,13 @@ func (self ConstantPool) getNameAndType(index uint16) (string, string) {
     return name, _type 
 }
 ```
-getClassName（）方法从常量池查找类名，代码如下： 
+getClassName()方法从常量池查找类名，代码如下： 
 ```go
 func (self ConstantPool) getClassName(index uint16) string { 
     classInfo := self.getConstantInfo(index).(*ConstantClassInfo)return self.getUtf8(classInfo.nameIndex) 
 }
 ``` 
-getUtf8（）方法从常量池查找UTF-8字符串，代码如下：
+getUtf8()方法从常量池查找UTF-8字符串，代码如下：
 ```go
 func (self ConstantPool) getUtf8(index uint16) string { 
     utf8Info :=self.getConstantInfo(index).(*ConstantUtf8Info) 
@@ -464,7 +464,7 @@ type ConstantInfo interface {
 func readConstantInfo(reader *ClassReader, cp ConstantPool) ConstantInfo {...} 
 func newConstantInfo(tag uint8, cp ConstantPool) ConstantInfo {...}
 ``` 
-readInfo（）方法读取常量信息，需要由具体的常量结构体实现。readConstantInfo（）函数先读出tag值，然后调用newConstantInfo（）函数创建具体的常量，最后调用常量的readInfo（）方法读取常量信息，代码如下：
+readInfo()方法读取常量信息，需要由具体的常量结构体实现。readConstantInfo()函数先读出tag值，然后调用newConstantInfo()函数创建具体的常量，最后调用常量的readInfo()方法读取常量信息，代码如下：
 ```go 
 func readConstantInfo(reader *ClassReader, cp ConstantPool) ConstantInfo { 
     tag := reader.readUint8() 
@@ -473,7 +473,7 @@ func readConstantInfo(reader *ClassReader, cp ConstantPool) ConstantInfo {
     return c 
 }
 ```
- newConstantInfo（）根据tag值创建具体的常量，代码如下： 
+ newConstantInfo()根据tag值创建具体的常量，代码如下： 
 ```go
 func newConstantInfo(tag uint8, cp ConstantPool) ConstantInfo { 
     switch tag { 
@@ -516,7 +516,7 @@ type ConstantIntegerInfo struct {
 }
 func (self *ConstantIntegerInfo) readInfo(reader *ClassReader) {...}
 ``` 
-readInfo（）先读取一个uint32数据，然后把它转型成int32类型， 代码如下： 
+readInfo()先读取一个uint32数据，然后把它转型成int32类型， 代码如下： 
 ```go
 func (self *ConstantIntegerInfo) readInfo(reader *ClassReader) { 
     bytes := reader.readUint32() 
@@ -544,7 +544,7 @@ func (self *ConstantFloatInfo) readInfo(reader *ClassReader) {
     self.val = math.Float32frombits(bytes) 
 }
 ```
-readInfo（）先读取一个uint32数据，然后调用math包的Float32frombits（）函数把它转换成float32类型。编译器给ClassFileTest类的PI字段生成了一个CONSTANT_Float_info常量，如图3-10所示。
+readInfo()先读取一个uint32数据，然后调用math包的Float32frombits()函数把它转换成float32类型。编译器给ClassFileTest类的PI字段生成了一个CONSTANT_Float_info常量，如图3-10所示。
 ![3-10](./img/3-10.png)
 图3-10 用classpy观察CONSTANT_Float_info常量
 ##### 3.3.5 CONSTANT_Long_info 
@@ -567,7 +567,7 @@ func (self *ConstantLongInfo) readInfo(reader *ClassReader) {
     self.val = int64(bytes) 
 }
 ```
-readInfo（）先读取一个uint64数据，然后把它转型成int64类型。编译器给ClassFileTest类的LONG字段生成了一个CONSTANT_Long_info常量，如图3-11所示。
+readInfo()先读取一个uint64数据，然后把它转型成int64类型。编译器给ClassFileTest类的LONG字段生成了一个CONSTANT_Long_info常量，如图3-11所示。
 ![3-11](./img/3-11.png)
 图3-11 用classpy观察CONSTANT_Long_info常量
 ##### 3.3.6 CONSTANT_Double_info 
@@ -589,7 +589,7 @@ func (self *ConstantDoubleInfo) readInfo(reader *ClassReader) {
     self.val = math.Float64frombits(bytes) 
 }
 ```
-readInfo（）先读取一个uint64数据，然后调用math包的Float64frombits（）函数把它转换成float64类型。编译器给ClassFileTest类的E字段生成了一个CONSTANT_Double_info常量，如图3-12所示。
+readInfo()先读取一个uint64数据，然后调用math包的Float64frombits()函数把它转换成float64类型。编译器给ClassFileTest类的E字段生成了一个CONSTANT_Double_info常量，如图3-12所示。
 ![3-12](./img/3-12.png)
 图3-12 用classpy观察CONSTANT_Double_info常量
 ##### 3.3.7 CONSTANT_Utf8_info 
@@ -601,8 +601,8 @@ CONSTANT_Utf8_info {
     u1 bytes[length]; 
 }
 ```
-注意，字符串在class文件中是以MUTF-8（Modified UTF-8）方式编码的。但为什么没有用标准的UTF-8编码方式，笔者没有找到明确的原因 [1] 。MUTF-8编码方式和UTF-8大致相同，但并不兼容。差别有两点：一是null字符（代码点U+0000）会被编码成2字节： 
-0xC0、0x80；二是补充字符（Supplementary Characters，代码点大于U+FFFF的Unicode字符）是按UTF-16拆分为代理对（Surrogate Pair）分别编码的。具体细节超出了本章的讨论范围，有兴趣的读者可以阅读Java虚拟机规范和Unicode规范的相关章节 [2] 。 
+注意，字符串在class文件中是以MUTF-8(Modified UTF-8)方式编码的。但为什么没有用标准的UTF-8编码方式，笔者没有找到明确的原因 [1] 。MUTF-8编码方式和UTF-8大致相同，但并不兼容。差别有两点：一是null字符(代码点U+0000)会被编码成2字节： 
+0xC0、0x80；二是补充字符(Supplementary Characters，代码点大于U+FFFF的Unicode字符)是按UTF-16拆分为代理对(Surrogate Pair)分别编码的。具体细节超出了本章的讨论范围，有兴趣的读者可以阅读Java虚拟机规范和Unicode规范的相关章节 [2] 。 
 在ch03\classfile目录下创建cp_utf8.go文件，在其中定义ConstantUtf8Info结构体，代码如下：
 ```go
 package classfile 
@@ -614,7 +614,7 @@ type ConstantUtf8Info struct {
 func (self *ConstantUtf8Info) readInfo(reader *ClassReader) {} 
 ```
 
-readInfo（）方法先读取出[]byte，然后调用decodeMUTF8（）函数把它解码成Go字符串，代码如下： 
+readInfo()方法先读取出[]byte，然后调用decodeMUTF8()函数把它解码成Go字符串，代码如下： 
 ```go
 func (self *ConstantUtf8Info) readInfo(reader *ClassReader) { 
     length := uint32(reader.readUint16()) 
@@ -622,7 +622,7 @@ func (self *ConstantUtf8Info) readInfo(reader *ClassReader) {
     self.str = decodeMUTF8(bytes) 
 }
 ```
-Java序列化机制也使用了MUTF-8编码。java.io.DataInput和java.io.DataOutput接口分别定义了readUTF（）和writeUTF（）方法，可以读写MUTF-8编码的字符串。decodeMUTF8（）函数的代码就是笔者根据java.io.DataInputStream.readUTF（）方法改写的。代码很长，解释起来也很乏味，所以这里就不详细解释了。因为Go语言字符串使用UTF-8编码，所以如果字符串中不包含null字符或补充字符，下面这个简化版的readMUTF8（）也是可以工作的。
+Java序列化机制也使用了MUTF-8编码。java.io.DataInput和java.io.DataOutput接口分别定义了readUTF()和writeUTF()方法，可以读写MUTF-8编码的字符串。decodeMUTF8()函数的代码就是笔者根据java.io.DataInputStream.readUTF()方法改写的。代码很长，解释起来也很乏味，所以这里就不详细解释了。因为Go语言字符串使用UTF-8编码，所以如果字符串中不包含null字符或补充字符，下面这个简化版的readMUTF8()也是可以工作的。
 ```go
 // 简化版，完整版请阅读本章源代码 
 func decodeMUTF8(bytes []byte) string { 
@@ -654,25 +654,25 @@ type ConstantStringInfo struct {
 func (self *ConstantStringInfo) readInfo(reader *ClassReader) {...} 
 func (self *ConstantStringInfo) String() string {...} 
 ```
-readInfo（）方法读取常量池索引，代码如下： 
+readInfo()方法读取常量池索引，代码如下： 
 ```go
 func (self *ConstantStringInfo) readInfo(reader *ClassReader) { 
     self.stringIndex = reader.readUint16() 
 }
 ```
-String（）方法按索引从常量池中查找字符串，代码如下： 
+String()方法按索引从常量池中查找字符串，代码如下： 
 ```go
 func (self *ConstantStringInfo) String() string { 
     return self.cp.getUtf8(self.stringIndex) 
 }
 ```
-ClassFileTest的main（）方法使用了字符串字面量“Hello，World！”，对应的CONSTANT_String_info常量如图3-14所示。
+ClassFileTest的main()方法使用了字符串字面量“Hello，World！”，对应的CONSTANT_String_info常量如图3-14所示。
 ![3-14](./img/3-14.png)
 图3-14 用classpy观察CONSTANT_String_info常量 
 
-可以看到，string_index是52（0x34）。我们按图索骥，从常量池中找出第52个常量，确实是个CONSTANT_Utf8_info，如图3-15所示。
+可以看到，string_index是52(0x34)。我们按图索骥，从常量池中找出第52个常量，确实是个CONSTANT_Utf8_info，如图3-15所示。
 ![3-15](./img/3-15.png) 
-图3-15 用classpy观察CONSTANT_String_info常量（2）
+图3-15 用classpy观察CONSTANT_String_info常量(2)
 ##### 3.3.9 CONSTANT_Class_info 
 CONSTANT_Class_info常量表示类或者接口的符号引用，结构如下：
 ```go
@@ -695,13 +695,13 @@ func (self *ConstantClassInfo) Name() string {
     return self.cp.getUtf8(self.nameIndex) 
 }
 ```
-代码和前一节大同小异，就不多解释了。类和超类索引，以及接口表中的接口索引指向的都是CONSTANT_Class_info常量。由图3-3可知，ClassFileTest的this_class索引是5。我们找到第5个常量，可以看到，的确是CONSTANT_Class_info。它的name_index是55（0x37），如图3-16所示。 
+代码和前一节大同小异，就不多解释了。类和超类索引，以及接口表中的接口索引指向的都是CONSTANT_Class_info常量。由图3-3可知，ClassFileTest的this_class索引是5。我们找到第5个常量，可以看到，的确是CONSTANT_Class_info。它的name_index是55(0x37)，如图3-16所示。 
 
 再看第55个常量，也的确是CONSTANT_Utf_info，如图3-17所示。
 ![3-16](./img/3-16.png)
 图3-16 用classpy观察CONSTANT_Class_info常量 
 ![3-17](./img/3-17.png)
-图3-17 用classpy观察CONSTANT_Class_info常量（2）
+图3-17 用classpy观察CONSTANT_Class_info常量(2)
 ##### 3.3.10 CONSTANT_NameAndType_info 
 CONSTANT_NameAndType_info给出字段或方法的名称和描述符。CONSTANT_Class_info和CONSTANT_NameAndType_info加在一起可以唯一确定一个字段或者方法。其结构如下： 
 ```go
@@ -711,19 +711,19 @@ CONSTANT_NameAndType_info {
     u2 descriptor_index; 
 }
 ``` 
-字段或方法名由name_index给出，字段或方法的描述符由descriptor_index给出。name_index和descriptor_index都是常量池索引，指向CONSTANT_Utf8_info常量。字段和方法名就是代码中出现的（或者编译器生成的）字段或方法的名字。Java虚拟机规范定义了一种简单的语法来描述字段和方法，可以根据下面的规则生成描述符。
-- 1）类型描述符。 
+字段或方法名由name_index给出，字段或方法的描述符由descriptor_index给出。name_index和descriptor_index都是常量池索引，指向CONSTANT_Utf8_info常量。字段和方法名就是代码中出现的(或者编译器生成的)字段或方法的名字。Java虚拟机规范定义了一种简单的语法来描述字段和方法，可以根据下面的规则生成描述符。
+- 1)类型描述符。 
     * ①基本类型byte、short、char、int、long、float和double的描述符是单个字母，分别对应B、S、C、I、J、F和D。注意，long的描述符是J而不是L。
     * ②引用类型的描述符是L＋类的完全限定名＋分号。 
     * ③数组类型的描述符是[＋数组元素类型描述符。 
-- 2）字段描述符就是字段类型的描述符。 
-- 3）方法描述符是（分号分隔的参数类型描述符）+返回值类型描述符，其中void返回值由单个字母V表示。
+- 2)字段描述符就是字段类型的描述符。 
+- 3)方法描述符是(分号分隔的参数类型描述符)+返回值类型描述符，其中void返回值由单个字母V表示。
 
 更详细的介绍可以参考Java虚拟机规范4.3节。表3-3给出了一些具体的例子。 
 
 表3-3 字段和方法描述符示例 
 
-我们都知道，Java语言支持方法重载（override），不同的方法可以有相同的名字，只要参数列表不同即可。这就是为什么CONSTANT_NameAndType_info结构要同时包含名称和描述符的原因。那么字段呢？Java是不能定义多个同名字段的，哪怕它们的类型各不相同。这只是Java语法的限制而已，从class文件的层面来看，是完全可以支持这点的。 
+我们都知道，Java语言支持方法重载(override)，不同的方法可以有相同的名字，只要参数列表不同即可。这就是为什么CONSTANT_NameAndType_info结构要同时包含名称和描述符的原因。那么字段呢？Java是不能定义多个同名字段的，哪怕它们的类型各不相同。这只是Java语法的限制而已，从class文件的层面来看，是完全可以支持这点的。 
 在ch03\classfile目录下创建cp_name_and_type.go文件，在其中定义ConstantName-AndTypeInfo结构体，代码如下：
 ```go
 package classfile 
@@ -738,7 +738,7 @@ func (self *ConstantNameAndTypeInfo) readInfo(reader *ClassReader) {
 ```
 代码比较简单，就不多解释了。
 ##### 3.3.11 CONSTANT_Fieldref_info、 CONSTANT_Methodref_info和 CONSTANT_InterfaceMethodref_info
-CONSTANT_Fieldref_info表示字段符号引用，CONSTANT_Methodref_info表示普通（非接口）方法符号引用，CONSTANT_InterfaceMethodref_info表示接口方法符号引用。这三种常量结构一模一样，为了节约篇幅，下面只给出CONSTANT_Fieldref_info的结构。 
+CONSTANT_Fieldref_info表示字段符号引用，CONSTANT_Methodref_info表示普通(非接口)方法符号引用，CONSTANT_InterfaceMethodref_info表示接口方法符号引用。这三种常量结构一模一样，为了节约篇幅，下面只给出CONSTANT_Fieldref_info的结构。 
 ```go
 CONSTANT_Fieldref_info { 
     u1 tag; 
@@ -772,16 +772,16 @@ type ConstantFieldrefInfo struct{ ConstantMemberrefInfo }
 type ConstantMethodrefInfo struct{ ConstantMemberrefInfo } 
 type ConstantInterfaceMethodrefInfo struct{ ConstantMemberrefInfo }
 ```
-ClassFileTest类的main（）方法使用了java.lang.System类的out字段，该字段由常量池第2项指出，如图3-18所示。
-可以看到，class_index是50（0x32），name_and_type_index是51（0x33）。我们找到第50和第51个常量，可以看到，确实是CONSTANT_Class_info和CONSTANT_Name-AndType_info，如图3-19所示。
+ClassFileTest类的main()方法使用了java.lang.System类的out字段，该字段由常量池第2项指出，如图3-18所示。
+可以看到，class_index是50(0x32)，name_and_type_index是51(0x33)。我们找到第50和第51个常量，可以看到，确实是CONSTANT_Class_info和CONSTANT_Name-AndType_info，如图3-19所示。
 ![3-18](./img/3-18.png)
 图3-18 用classpy观察CONSTANT_Fieldref_info常量
 ![3-19](./img/3-19.png)
-图3-19 用classpy观察CONSTANT_Fieldref_info常量（2）
+图3-19 用classpy观察CONSTANT_Fieldref_info常量(2)
 ##### 3.3.12 常量池小结 
 还有三个常量没有介绍：CONSTANT_MethodType_info、CONSTANT_MethodHandle_info和CONSTANT_InvokeDynamic_info。它们是Java SE 7才添加到class文件中的，目的是支持新增的invokedynamic指令。本书不讨论invokedynamic指令，所以解析这三个常量的代码就不在这里介绍了。代码也非常简单，有兴趣的读者可以阅读随书源代码中的ch03\cp_invoke_dynamic.go文件。 
 
-可以把常量池中的常量分为两类：字面量（literal）和符号引用（symbolic reference）。字面量包括数字常量和字符串常量，符号引用包括类和接口名、字段和方法信息等。除了字面量，其他常量都是通过索引直接或间接指向CONSTANT_Utf8_info常量，以CONSTANT_Fieldref_info为例，如图3-20所示。
+可以把常量池中的常量分为两类：字面量(literal)和符号引用(symbolic reference)。字面量包括数字常量和字符串常量，符号引用包括类和接口名、字段和方法信息等。除了字面量，其他常量都是通过索引直接或间接指向CONSTANT_Utf8_info常量，以CONSTANT_Fieldref_info为例，如图3-20所示。
 ![3-20](./img/3-20.png)
 图3-20 常量引用关系 
 本节只是简单介绍常量池和各种常量的结构，在第6章讨论运行时常量池，第7章讨论方法调用时，会进一步讨论它们的用途。
@@ -806,7 +806,7 @@ func readAttributes(reader *ClassReader, cp ConstantPool) []AttributeInfo {...}
 func readAttribute(reader *ClassReader, cp ConstantPool) AttributeInfo {...} 
 func newAttributeInfo(attrName string, attrLen uint32, cp ConstantPool) AttributeInfo {...} 
 ```
-和ConstantInfo接口一样，AttributeInfo接口也只定义了一个readInfo（）方法，需要由具体的属性实现。readAttributes（）函数读取属性表，代码如下： 
+和ConstantInfo接口一样，AttributeInfo接口也只定义了一个readInfo()方法，需要由具体的属性实现。readAttributes()函数读取属性表，代码如下： 
 ```go
 func readAttributes(reader *ClassReader, cp ConstantPool) []AttributeInfo { 
     attributesCount := reader.readUint16() 
@@ -817,7 +817,7 @@ func readAttributes(reader *ClassReader, cp ConstantPool) []AttributeInfo {
     return attributes 
 }
 ``` 
-函数readAttribute（）读取单个属性，代码如下：
+函数readAttribute()读取单个属性，代码如下：
 ```go
 func readAttribute(reader *ClassReader, cp ConstantPool) AttributeInfo { 
     attrNameIndex := reader.readUint16() 
@@ -828,7 +828,7 @@ func readAttribute(reader *ClassReader, cp ConstantPool) AttributeInfo {
     return attrInfo 
 } 
 ```
-readAttribute（）先读取属性名索引，根据它从常量池中找到属性名，然后读取属性长度，接着调用newAttributeInfo（）函数创建具体的属性实例。Java虚拟机规范预定义了23种属性，先解析其中的8种。newAttributeInfo（）函数的代码如下：
+readAttribute()先读取属性名索引，根据它从常量池中找到属性名，然后读取属性长度，接着调用newAttributeInfo()函数创建具体的属性实例。Java虚拟机规范预定义了23种属性，先解析其中的8种。newAttributeInfo()函数的代码如下：
 ```go 
 func newAttributeInfo(attrName string, attrLen uint32, cp ConstantPool) AttributeInfo { 
     switch attrName { 
@@ -895,7 +895,7 @@ func (self *MarkerAttribute) readInfo(reader *ClassReader) {
     // read nothing 
 }
 ```
-由于这两个属性都没有数据，所以readInfo（）方法是空的。
+由于这两个属性都没有数据，所以readInfo()方法是空的。
 ##### 3.4.3 SourceFile属性 
 SourceFile是可选定长属性，只会出现在ClassFile结构中，用于指出源文件名。其结构定义如下：
 ```go
@@ -924,9 +924,9 @@ func (self *SourceFileAttribute) FileName() string {
 图3-21 用classpy观察SourceFile属性 
 第47和第48个常量，确实都是CONSTANT_Utf8_info常量，如图3-22所示。
 ![3-22](./img/3-22.png) 
-图3-22 用classpy观察SourceFile属性（2）
+图3-22 用classpy观察SourceFile属性(2)
 ##### 3.4.4 ConstantValue属性 
-ConstantValue是定长属性，只会出现在field_info结构中，用于表示常量表达式的值（详见Java语言规范的15.28节）。其结构定义如下：
+ConstantValue是定长属性，只会出现在field_info结构中，用于表示常量表达式的值(详见Java语言规范的15.28节)。其结构定义如下：
 ```go
 ConstantValue_attribute { 
     u2 attribute_name_index; 
@@ -955,9 +955,9 @@ func (self *ConstantValueAttribute) ConstantValueIndex() uint16 {
 ![3-23](./img/3-23.png)
 图3-23 用classpy观察ConstantValue属性 
 
-可以看到，属性表里确实有一个ConstantValue属性，constantvalue_index是10（0x0A），指向CONSTANT_Integer_info，如图3-24所示。
+可以看到，属性表里确实有一个ConstantValue属性，constantvalue_index是10(0x0A)，指向CONSTANT_Integer_info，如图3-24所示。
 ![3-24](./img/3-24.png)
-图3-24 用classpy观察ConstantValue属性（2）
+图3-24 用classpy观察ConstantValue属性(2)
 ##### 3.4.5 Code属性 
 Code是变长属性，只存在于method_info结构中。Code属性中存放字节码等方法相关信息。相比前面介绍的几种属性，Code属性比较复杂，其结构定义如下： 
 ```go
@@ -1000,7 +1000,7 @@ type ExceptionTableEntry struct {
 }
 func (self *CodeAttribute) readInfo(reader *ClassReader) {...} 
 ```
-readInfo（）方法的代码如下：
+readInfo()方法的代码如下：
 ```go
 func (self *CodeAttribute) readInfo(reader *ClassReader) { 
     self.maxStack = reader.readUint16() 
@@ -1011,7 +1011,7 @@ func (self *CodeAttribute) readInfo(reader *ClassReader) {
     self.attributes = readAttributes(reader, self.cp) 
 }
 ```
-readExceptionTable（）函数的代码如下： 
+readExceptionTable()函数的代码如下： 
 ```go
 func readExceptionTable(reader *ClassReader) []*ExceptionTableEntry { 
     exceptionTableLength := reader.readUint16() 
@@ -1026,7 +1026,7 @@ func readExceptionTable(reader *ClassReader) []*ExceptionTableEntry {
     return exceptionTable 
 }
 ```
-ClassFileTest.main（）方法的Code属性如图3-25所示。
+ClassFileTest.main()方法的Code属性如图3-25所示。
 ![3-25](./img/3-25.png)
 图3-25 用classpy观察Code属性
 ##### 3.4.6 Exceptions属性
@@ -1052,7 +1052,7 @@ func (self *ExceptionsAttribute) ExceptionIndexTable() []uint16 {
     return self.exceptionIndexTable 
 }
 ```
-代码比较简单，就不多解释了。ClassFileTest.main（）方法的Exceptions属性如图3-26所示。
+代码比较简单，就不多解释了。ClassFileTest.main()方法的Exceptions属性如图3-26所示。
 ![3-26](./img/3-26.png)
 图3-26 用classpy观察Code属性
 ##### 3.4.7 LineNumberTable和LocalVariableTable属性 
@@ -1082,7 +1082,7 @@ type LineNumberTableEntry struct {
 }
 func (self *LineNumberTableAttribute) readInfo(reader *ClassReader) {...} 
 ```
-readInfo（）方法读取属性表数据，代码如下： 
+readInfo()方法读取属性表数据，代码如下： 
 ```go
 func (self *LineNumberTableAttribute) readInfo(reader *ClassReader) { 
     lineNumberTableLength := reader.readUint16() 
@@ -1098,7 +1098,7 @@ func (self *LineNumberTableAttribute) readInfo(reader *ClassReader) {
 在第10章讨论异常处理时会详细讨论LineNumberTable属性。
 #### 3.5 测试本章代码 
 在第2章的测试中，把class文件加载到了内存中，并且把一堆看似杂乱无章的数字打印到了控制台。相信读者一定不会满足于此。本节就来修改测试代码，把命令行工具临时打造成一个简化版的javap。 
-打开ch03\main.go文件，修改import语句和startJVM（）函数，代码如下：
+打开ch03\main.go文件，修改import语句和startJVM()函数，代码如下：
 ```go 
 package main 
 import "fmt" 
@@ -1108,7 +1108,7 @@ import "jvmgo/ch03/classpath"
 func main() {...} 
 func startJVM(options *cmdline.Options, class string, args []string) {...} 
 ```
-main（）函数不用变，修改startJVM（）函数，代码如下： 
+main()函数不用变，修改startJVM()函数，代码如下： 
 ```go
 func startJVM(cmd *Cmd) { 
     cp := classpath.Parse(cmd.XjreOption, cmd.cpOption) 
@@ -1118,7 +1118,7 @@ func startJVM(cmd *Cmd) {
     printClassInfo(cf) 
 }
 ``` 
-loadClass（）函数读取并解析class文件，代码如下：
+loadClass()函数读取并解析class文件，代码如下：
 ```go
 func loadClass(className string, cp *classpath.Classpath) *classfile.ClassFile { 
     classData, _, err := cp.ReadClass(className) 
@@ -1132,7 +1132,7 @@ func loadClass(className string, cp *classpath.Classpath) *classfile.ClassFile {
     return cf 
 }
 ```
-printClassInfo（）函数把class文件的一些重要信息打印出来，代码如下：
+printClassInfo()函数把class文件的一些重要信息打印出来，代码如下：
 ```go 
 func printClassInfo(cf *classfile.ClassFile) { 
     fmt.Printf("version: %v.%v\n", cf.MajorVersion(), cf.MinorVersion()) 
@@ -1157,7 +1157,7 @@ go install jvmgo\ch03
 ```
 
 
-编译成功后，在D：\go\workspace\bin目录下会出现ch03.exe文件。执行ch03.exe，指定-Xjre选项和类名，就可以打印出class文件的信息。笔者把java.lang.String.class文件（位于rt.jar中）的信息打印了出来，如图3-27所示。如果读者想测试自己编写的类，记得要指定-classpath选项。与第2章相比，我们显然取得了很大的进步。 
+编译成功后，在D：\go\workspace\bin目录下会出现ch03.exe文件。执行ch03.exe，指定-Xjre选项和类名，就可以打印出class文件的信息。笔者把java.lang.String.class文件(位于rt.jar中)的信息打印了出来，如图3-27所示。如果读者想测试自己编写的类，记得要指定-classpath选项。与第2章相比，我们显然取得了很大的进步。 
 ![3-27](./img/3-27.png)
 图3-27 ch03.exe的测试结果
 #### 3.6 本章小结 
